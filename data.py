@@ -10,6 +10,7 @@ class Data:
         self.initCellData()
 
     def initGrid(self):
+        config = self.config
         nx = config['grid_nx']
         ny = config['grid_ny']
         nz = config['grid_nz']
