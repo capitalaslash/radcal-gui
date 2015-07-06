@@ -7,6 +7,7 @@ class Data:
         self.config = config
 
         self.initGrid()
+        self.initPointData()
         self.initCellData()
 
     def initGrid(self):
@@ -54,6 +55,17 @@ class Data:
             idData.SetValue(i, i)
 
         self.grid.GetCellData().AddArray(idData)
+
+    def initPointData(self):
+        numPoints = self.grid.GetNumberOfPoints()
+
+        idData = vtkIntArray()
+        idData.SetName('id')
+        idData.SetNumberOfValues(numPoints)
+        for i in xrange(0, numPoints):
+            idData.SetValue(i, i)
+
+        self.grid.GetPointData().AddArray(idData)
 
     def write(self):
         writer = vtk.vtkXMLRectilinearGridWriter()
