@@ -8,7 +8,7 @@ config = {
     u'grid_nz': 2,
 
     u'grid_origin': [0.0, 0.0, 0.0],
-    u'grid_length': [1.0, 1.0, 1.0]
+    u'grid_length': [5.0, 3.0, 1.0]
 }
 
 if __name__ == '__main__':
