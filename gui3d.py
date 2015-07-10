@@ -33,6 +33,10 @@ class Gui3d(Frame):
         buttonRender = Button(buttonFrame, text='Render', command=self.vtk.render)
         buttonRender.pack()
 
+        self.buttonClear = Button(buttonFrame, text='Clear', command=self.clear,
+            state='disabled')
+        self.buttonClear.pack()
+
         self.scalarBarInt = IntVar()
         scalarBarCheck = Checkbutton(buttonFrame, text='ScalarBar',
             variable=self.scalarBarInt, command=self.scalarBarModified)
@@ -46,6 +50,14 @@ class Gui3d(Frame):
 
     def varModified(self, ev):
         var = self.varMenuString.get()
+    def clear(self):
+        self.varList.delete(0, END)
+        self.buttonClear['state']='disabled'
+        self.scalarBarInt.set(0)
+        self.scalarBarCheck['state']='disabled'
+        self.contourInt.set(0)
+        self.contourCheck['state']='disabled'
+        self.vtk.clear()
         self.vtk.data.grid.GetPointData().SetActiveScalars(var)
         self.vtk.renWin.Render()
 
