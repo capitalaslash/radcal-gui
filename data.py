@@ -1,5 +1,6 @@
 #! /usr/bin/env python2
 
+import math
 from vtk import *
 
 class Data:
@@ -55,8 +56,37 @@ class Data:
             idData.SetValue(i, i)
 
         self.grid.GetCellData().AddArray(idData)
+        self.grid.GetCellData().SetActiveScalars('id')
 
     def initPointData(self):
+        grid = self.grid
+        o = self.config['grid_origin']
+        l = self.config['grid_length']
+        mean1 = (0.5*l[0], 0.1*l[1], 0.0*l[2])
+        sigma1 = 1.2
+        mean2 = (0.5*l[0], 0.1*l[1], 0.0*l[2])
+        sigma2 = 1.6
+
+        numPts = grid.GetNumberOfPoints()
+        c1 = vtkFloatArray()
+        c1.SetName('c1')
+        c1.SetNumberOfTuples(numPts)
+        c2 = vtkFloatArray()
+        c2.SetName('c2')
+        c2.SetNumberOfTuples(numPts)
+        for i in xrange(0, numPts):
+            p = grid.GetPoint(i)
+            dist = (p[0]-mean1[0])*(p[0]-mean1[0])+(p[1]-mean1[1])*(p[1]-mean1[1])+(p[2]-mean1[2])*(p[2]-mean1[2])
+            gauss = math.exp(- dist / (2*sigma1*sigma1)) / (math.sqrt(2*math.pi)*sigma1)
+            c1.SetValue(i, gauss)
+            dist = (p[0]-mean2[0])*(p[0]-mean2[0])+(p[1]-mean2[1])*(p[1]-mean2[1])+(p[2]-mean2[2])*(p[2]-mean2[2])
+            gauss = math.exp(- dist / (2*sigma2*sigma2)) / (math.sqrt(2*math.pi)*sigma2)
+            c2.SetValue(i, gauss)
+
+        grid.GetPointData().AddArray(c1)
+        grid.GetPointData().AddArray(c2)
+        grid.GetPointData().SetActiveScalars('c1')
+
         numPoints = self.grid.GetNumberOfPoints()
 
         idData = vtkIntArray()
@@ -64,7 +94,6 @@ class Data:
         idData.SetNumberOfValues(numPoints)
         for i in xrange(0, numPoints):
             idData.SetValue(i, i)
-
         self.grid.GetPointData().AddArray(idData)
 
     def write(self):
