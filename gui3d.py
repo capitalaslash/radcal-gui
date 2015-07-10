@@ -1,6 +1,5 @@
 #! /usr/bin/env python2
 
-from vtk import *
 from Tkinter import *
 
 from vtk.tk.vtkTkRenderWindowInteractor import vtkTkRenderWindowInteractor
