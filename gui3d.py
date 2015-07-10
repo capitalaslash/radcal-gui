@@ -30,7 +30,7 @@ class Gui3d(Frame):
         buttonFrame = Frame(self)
         buttonFrame.grid(row=0, column=1)
 
-        buttonRender = Button(buttonFrame, text='Render', command=self.vtk.render)
+        buttonRender = Button(buttonFrame, text='Render', command=self.render)
         buttonRender.pack()
 
         self.buttonClear = Button(buttonFrame, text='Clear', command=self.clear,
@@ -38,18 +38,21 @@ class Gui3d(Frame):
         self.buttonClear.pack()
 
         self.scalarBarInt = IntVar()
-        scalarBarCheck = Checkbutton(buttonFrame, text='ScalarBar',
-            variable=self.scalarBarInt, command=self.scalarBarModified)
-        scalarBarCheck.pack()
+        self.scalarBarCheck = Checkbutton(buttonFrame, text='ScalarBar',
+            variable=self.scalarBarInt, command=self.scalarBarModified,
+            state='disabled')
+        self.scalarBarCheck.pack()
 
-        self.varMenuString = StringVar()
-        varList = [ 'c1', 'c2' ]
-        varMenu = OptionMenu(buttonFrame, self.varMenuString, *varList,
-            command=self.varModified)
-        varMenu.pack()
+        self.contourInt = IntVar()
+        self.contourCheck = Checkbutton(buttonFrame, text='Contour',
+            variable=self.contourInt, command=self.contourModified,
+            state='disabled')
+        self.contourCheck.pack()
 
-    def varModified(self, ev):
-        var = self.varMenuString.get()
+        self.varList = Listbox(buttonFrame, selectmode='browse')
+        self.varList.bind('<<ListboxSelect>>', self.varModified)
+        self.varList.pack()
+
     def clear(self):
         self.varList.delete(0, END)
         self.buttonClear['state']='disabled'
@@ -58,12 +61,34 @@ class Gui3d(Frame):
         self.contourInt.set(0)
         self.contourCheck['state']='disabled'
         self.vtk.clear()
+
+    def render(self):
+        self.varList.delete(0, END)
+        varNames = self.vtk.data.getVarList()
+        for var in varNames:
+            self.varList.insert('end', var)
+        self.buttonClear['state']='normal'
+        self.scalarBarCheck['state']='normal'
+        self.contourCheck['state']='normal'
+        self.vtk.render()
+
+    def varModified(self, *args):
+        idx = self.varList.curselection()[0]
+        var = self.varList.get(idx)
+        # print 'setting ', var
         self.vtk.data.grid.GetPointData().SetActiveScalars(var)
         self.vtk.renWin.Render()
 
     def scalarBarModified(self):
         self.vtk.scalarWidget.SetEnabled(self.scalarBarInt.get())
         self.vtk.renWin.Render()
+
+    def contourModified(self):
+        self.vtk.clear()
+        if self.contourInt.get():
+            self.vtk.renderContour()
+        else:
+            self.vtk.render()
 
     def initKShortcuts(self):
         self.bind_all("<Control-q>", lambda e: self.parent.quit() )
