@@ -6,61 +6,68 @@ from Tkinter import *
 from vtk.tk.vtkTkRenderWindowInteractor import vtkTkRenderWindowInteractor
 
 import data
+import vtk3d
 
 class Gui3d(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.parent = parent
-        self.pack()
+        self.pack(fill='both', expand=True)
 
-        axesActor = vtkAxesActor()
-        self.ren = vtkRenderer()
-        self.ren.SetBackground(0.1, 0.2, 0.4)
-        self.ren.AddActor(axesActor)
-        renWin = vtkRenderWindow()
-        renWin.AddRenderer(self.ren)
-        self.camera = self.ren.GetActiveCamera()
+        self.vtk = vtk3d.Vtk3d()
 
-        interactor = vtkTkRenderWindowInteractor(self, rw=renWin, width=600, height=600)
-        interactor.pack(fill='both', expand=1)
+        self.iren = vtkTkRenderWindowInteractor(self, rw=self.vtk.renWin, width=600, height=600)
+        self.iren.grid(row=0, column=0, sticky='nsew')
 
-        buttonCamera = Button(self, text='Camera', command=self.outputCamera)
-        buttonCamera.pack(side='bottom', padx=5, pady=5)
+        self.vtk.setInteractor(self.iren)
 
-    def outputCamera(self):
-        print self.camera
+        self.initButtonFrame()
+
+        # all additional space should go to vtk window
+        Grid.columnconfigure(self, 0, weight=1)
+        Grid.rowconfigure(self, 0, weight=1)
+
+    def initButtonFrame(self):
+        buttonFrame = Frame(self)
+        buttonFrame.grid(row=0, column=1)
+
+        buttonRender = Button(buttonFrame, text='Render', command=self.vtk.render)
+        buttonRender.pack()
+
+        self.scalarBarInt = IntVar()
+        scalarBarCheck = Checkbutton(buttonFrame, text='ScalarBar',
+            variable=self.scalarBarInt, command=self.scalarBarModified)
+        scalarBarCheck.pack()
+
+        self.varMenuString = StringVar()
+        varList = [ 'c1', 'c2' ]
+        varMenu = OptionMenu(buttonFrame, self.varMenuString, *varList,
+            command=self.varModified)
+        varMenu.pack()
+
+    def varModified(self, ev):
+        var = self.varMenuString.get()
+        self.vtk.data.grid.GetPointData().SetActiveScalars(var)
+        self.vtk.renWin.Render()
+
+    def scalarBarModified(self):
+        self.vtk.scalarWidget.SetEnabled(self.scalarBarInt.get())
+        self.vtk.renWin.Render()
 
     def initKShortcuts(self):
         self.bind_all("<Control-q>", lambda e: self.parent.quit() )
         self.bind_all("q", lambda e: self.parent.quit() )
 
     def loadData(self, data):
-        self.data = data
-
-        mapper = vtkDataSetMapper()
-        mapper.SetInputData(self.data.grid)
-        mapper.SetScalarModeToUseCellData()
-        actor = vtkActor()
-        actor.SetMapper(mapper)
-        self.ren.AddActor(actor)
-
-    def adjustCamera(self):
-        # self.ren.ResetCamera()
-        self.camera.SetPosition(10.0, -6.0, 5.3)
-        self.camera.SetFocalPoint(2.5, 1.5, 0.5)
-        self.camera.SetViewUp(-0.31, 0.28, 0.90)
-
+        self.vtk.loadData(data)
 
 if __name__ == '__main__':
-    root = Tk()
-    app = Gui3d(root)
-
-    app.initKShortcuts()
-
     from config import *
     from data import *
     data = Data(config)
-    app.loadData(data)
-    app.adjustCamera()
 
+    root = Tk()
+    app = Gui3d(root)
+    app.initKShortcuts()
+    app.loadData(data)
     root.mainloop()
