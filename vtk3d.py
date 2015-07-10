@@ -73,7 +73,34 @@ class Vtk3d(object):
 
     def render(self):
         """
-        surface (contour) visualization of data
+        surface visualization of data
+        """
+        self.ren.RemoveAllViewProps()
+        activeScalar = self.data.grid.GetPointData().GetScalars()
+        # print 'active scalar is', activeScalar.GetName()
+
+        # viz
+        self.mainMapper = vtkDataSetMapper()
+        self.mainMapper.SetInputData(self.data.grid)
+        # self.mainMapper.SetScalarModeToUseCellData()
+        self.mainMapper.SetLookupTable(self.lut)
+        self.mainMapper.SetScalarRange(activeScalar.GetRange())
+        self.mainActor = vtkLODActor()
+        self.mainActor.SetMapper(self.mainMapper)
+
+        self.ren.AddActor(self.mainActor)
+        self.ren.ResetCamera()
+
+        # set up scalar bar
+        scalarBarActor = vtkScalarBarActor()
+        scalarBarActor.SetTitle(activeScalar.GetName())
+        scalarBarActor.SetLookupTable(self.lut)
+        self.scalarWidget.SetScalarBarActor(scalarBarActor)
+        if self.scalarWidget.GetEnabled():
+            self.scalarWidget.EnabledOff()
+            self.scalarWidget.EnabledOn()
+
+        self.renWin.Render()
         """
         activeScalar = self.data.grid.GetPointData().GetScalars()
 
