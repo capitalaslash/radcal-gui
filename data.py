@@ -96,6 +96,15 @@ class Data:
             idData.SetValue(i, i)
         self.grid.GetPointData().AddArray(idData)
 
+    def getVarList(self):
+        pointData = self.grid.GetPointData()
+        numVars = pointData.GetNumberOfComponents()
+        varNames = []
+        for i in range(0, numVars):
+            varNames.append(pointData.GetArray(i).GetName())
+        print varNames
+        return varNames
+
     def write(self):
         writer = vtk.vtkXMLRectilinearGridWriter()
         writer.SetInputData(self.grid)
