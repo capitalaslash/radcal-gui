@@ -64,6 +64,13 @@ class Vtk3d(object):
         self.scalarWidget = vtkScalarBarWidget()
         self.scalarWidget.SetInteractor(self.iren)
 
+    def clear(self):
+        """
+        surface visualization of data
+        """
+        self.ren.RemoveAllViewProps()
+        self.renWin.Render()
+
     def render(self):
         """
         surface (contour) visualization of data
