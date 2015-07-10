@@ -111,19 +111,17 @@ class Vtk3d(object):
         # print 'active scalar is', activeScalar.GetName()
 
         # contour
-        contour = vtkContourFilter()
-        contour.SetInputData(self.data.grid)
-        contour.SetNumberOfContours(4)
+        self.contour = vtkContourFilter()
+        self.contour.SetInputData(self.data.grid)
+        self.contour.SetNumberOfContours(1)
 
-        scalarMax = activeScalar.GetRange()[1]
-        contour.SetValue(0, 0.2*scalarMax)
-        contour.SetValue(1, 0.4*scalarMax)
-        contour.SetValue(2, 0.6*scalarMax)
-        contour.SetValue(3, 0.8*scalarMax)
+        scalarRange = activeScalar.GetRange()
+        mean = 0.5*(scalarRange[0]+scalarRange[1])
+        self.contour.SetValue(0, mean)
 
         # viz
         self.mainMapper = vtkDataSetMapper()
-        self.mainMapper.SetInputConnection(contour.GetOutputPort())
+        self.mainMapper.SetInputConnection(self.contour.GetOutputPort())
         self.mainMapper.SetLookupTable(self.lut)
         self.mainMapper.SetScalarRange(activeScalar.GetRange())
         self.mainActor = vtkLODActor()
@@ -141,6 +139,23 @@ class Vtk3d(object):
         self.ren.AddActor(outlineActor)
         self.ren.ResetCamera()
 
+        sliderRep = vtkSliderRepresentation2D()
+        sliderRep.SetMinimumValue(scalarRange[0])
+        sliderRep.SetMaximumValue(scalarRange[1])
+        sliderRep.SetValue(mean)
+        sliderRep.SetTitleText("contour")
+        sliderRep.GetPoint1Coordinate().SetCoordinateSystemToNormalizedViewport()
+        sliderRep.GetPoint1Coordinate().SetValue(0.7, 0.1)
+        sliderRep.GetPoint2Coordinate().SetCoordinateSystemToNormalizedViewport()
+        sliderRep.GetPoint2Coordinate().SetValue(1.0, 0.1)
+
+        self.sliderWidget = vtkSliderWidget()
+        self.sliderWidget.SetInteractor(self.iren)
+        self.sliderWidget.SetRepresentation(sliderRep)
+        self.sliderWidget.SetAnimationModeToAnimate()
+        self.sliderWidget.EnabledOn()
+        self.sliderWidget.AddObserver(vtkCommand.InteractionEvent, self.updateContour);
+
         # set up scalar bar
         scalarBarActor = vtkScalarBarActor()
         scalarBarActor.SetTitle(activeScalar.GetName())
@@ -151,6 +166,10 @@ class Vtk3d(object):
             self.scalarWidget.EnabledOn()
 
         self.renWin.Render()
+
+    def updateContour(self, obj, ev):
+        value = self.sliderWidget.GetRepresentation().GetValue()
+        self.contour.SetValue(0, value)
 
     def pointDataModified(self, obj, ev):
         """
