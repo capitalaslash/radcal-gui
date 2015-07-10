@@ -4,7 +4,7 @@ from Tkinter import *
 
 from vtk.tk.vtkTkRenderWindowInteractor import vtkTkRenderWindowInteractor
 
-import data
+# import data
 import vtk3d
 
 class Gui3d(Frame):
