@@ -101,29 +101,33 @@ class Vtk3d(object):
             self.scalarWidget.EnabledOn()
 
         self.renWin.Render()
-        """
-        activeScalar = self.data.grid.GetPointData().GetScalars()
 
-        # # contour
-        # contour = vtkContourFilter()
-        # contour.SetInputData(self.grid)
-        # contour.SetNumberOfContours(4)
-        #
-        # scalarMax = activeScalar.GetRange()[1]
-        # contour.SetValue(0, 0.2*scalarMax)
-        # contour.SetValue(1, 0.4*scalarMax)
-        # contour.SetValue(2, 0.6*scalarMax)
-        # contour.SetValue(3, 0.8*scalarMax)
+    def renderContour(self):
+        """
+        contour visualization of data
+        """
+        self.ren.RemoveAllViewProps()
+        activeScalar = self.data.grid.GetPointData().GetScalars()
+        # print 'active scalar is', activeScalar.GetName()
+
+        # contour
+        contour = vtkContourFilter()
+        contour.SetInputData(self.data.grid)
+        contour.SetNumberOfContours(4)
+
+        scalarMax = activeScalar.GetRange()[1]
+        contour.SetValue(0, 0.2*scalarMax)
+        contour.SetValue(1, 0.4*scalarMax)
+        contour.SetValue(2, 0.6*scalarMax)
+        contour.SetValue(3, 0.8*scalarMax)
 
         # viz
-        self.mapper = vtkDataSetMapper()
-        self.mapper.SetInputData(self.data.grid)
-        # self.mapper.SetInputConnection(contour.GetOutputPort())
-        # self.mapper.SetScalarModeToUseCellData()
-        self.mapper.SetLookupTable(self.lut)
-        self.mapper.SetScalarRange(activeScalar.GetRange())
-        actor = vtkLODActor()
-        actor.SetMapper(self.mapper)
+        self.mainMapper = vtkDataSetMapper()
+        self.mainMapper.SetInputConnection(contour.GetOutputPort())
+        self.mainMapper.SetLookupTable(self.lut)
+        self.mainMapper.SetScalarRange(activeScalar.GetRange())
+        self.mainActor = vtkLODActor()
+        self.mainActor.SetMapper(self.mainMapper)
 
         # outline
         outline = vtkOutlineFilter()
@@ -133,23 +137,27 @@ class Vtk3d(object):
         outlineActor = vtkActor()
         outlineActor.SetMapper(outlineMapper)
 
-        self.ren.AddActor(actor)
+        self.ren.AddActor(self.mainActor)
         self.ren.AddActor(outlineActor)
         self.ren.ResetCamera()
-        self.renWin.Render()
 
         # set up scalar bar
         scalarBarActor = vtkScalarBarActor()
         scalarBarActor.SetTitle(activeScalar.GetName())
         scalarBarActor.SetLookupTable(self.lut)
         self.scalarWidget.SetScalarBarActor(scalarBarActor)
+        if self.scalarWidget.GetEnabled():
+            self.scalarWidget.EnabledOff()
+            self.scalarWidget.EnabledOn()
+
+        self.renWin.Render()
 
     def pointDataModified(self, obj, ev):
         """
         callback: activated on modifications to pointData in grid
         """
         activeScalar = self.data.grid.GetPointData().GetScalars()
-        self.mapper.SetScalarRange(activeScalar.GetRange())
+        self.mainMapper.SetScalarRange(activeScalar.GetRange())
         scalarBarActor = vtkScalarBarActor()
         scalarBarActor.SetTitle(activeScalar.GetName())
         scalarBarActor.SetLookupTable(self.lut)
