@@ -1,8 +1,11 @@
 #! /usr/bin/env python2
 
+import os
+
 from vtk import *
 
 from Tkinter import *
+import tkFileDialog
 import ttk
 
 from vtk.tk.vtkTkRenderWindowInteractor import vtkTkRenderWindowInteractor
@@ -21,6 +24,8 @@ class App(Frame):
         self.frameFile = Frame(self, height=40, bd=1, relief='sunken')
         self.frameFile.pack(fill='x', expand=0)
 
+        buttonFileOpen = Button(self.frameFile, text='askopenfile', command=self.askopenfile)
+        buttonFileOpen.pack(side='left')
 
         # middle section
         self.frameMain = Frame(self)
@@ -48,6 +53,16 @@ class App(Frame):
         buttonQuit.pack(side='right')
 
         self.initKShortcuts()
+
+    def askopenfile(self):
+        return tkFileDialog.askopenfile(mode='r',
+            defaultextension='.dat',
+            filetypes=[('dat files', '.dat'), ('all files', '.*')],
+            initialdir=os.getcwd(),
+            initialfile='test.dat',
+            parent=self.frameFile,
+            # title='title'
+            )
 
     def initKShortcuts(self):
         self.bind_all("<Control-q>", lambda e: self.parent.quit() )
