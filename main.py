@@ -15,27 +15,37 @@ class App(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.parent = parent
+        self.pack(fill='both', expand=1)
 
-        self.pack()
+        # top section
+        self.frameFile = Frame(self, height=40, bd=1, relief='sunken')
+        self.frameFile.pack(fill='x', expand=0)
 
-        notebook = ttk.Notebook(self)
 
-        gui2d_frame = Frame(notebook, width=600, height=600)
-        gui2d_frame.pack(fill='both', expand=1)
-        notebook.add(gui2d_frame, text='2D')
+        # middle section
+        self.frameMain = Frame(self)
+        self.frameMain.pack(fill='both', expand=1)
 
-        self.gui3d_frame = Gui3d(notebook)
-        self.gui3d_frame.pack(fill='both', expand=1)
-        notebook.add(self.gui3d_frame, text='3D')
+        self.iren = vtkTkRenderWindowInteractor(self.frameMain) #, rw=self.renWin,
+#            width=600, height=600)
+        self.iren.pack(side='left', fill='both', expand=1)
 
-        notebook.pack(fill='both', expand=1)
+        notebook = ttk.Notebook(self.frameMain)
+        self.frameGui2d = Frame(notebook, width=250) #Gui2d(notebook)
+        self.frameGui2d.pack(fill='both', expand=1)
+        notebook.add(self.frameGui2d, text='2D')
+        self.frameGui3d = Frame(notebook, width=250) #Gui3d(notebook)
+        self.frameGui3d.pack(fill='both', expand=1)
+        notebook.add(self.frameGui3d, text='3D')
+        notebook.pack(side='left', fill='y', expand=0)
 
-        button_frame = Frame(self, bd=1, relief='sunken')
-        button_frame.pack(side='bottom', fill='x')
+        # bottom section
+        self.frameButton = Frame(self, bd=1, relief='sunken')
+        self.frameButton.pack(side='bottom', fill='x')
 
-        button_quit = Button(button_frame, text='quit',
+        buttonQuit = Button(self.frameButton, text='quit',
             command=self.parent.quit, padx=5, pady=5)
-        button_quit.pack(side='right')
+        buttonQuit.pack(side='right')
 
         self.initKShortcuts()
 
@@ -45,7 +55,7 @@ class App(Frame):
 
     def loadData(self, data):
         self.data = data
-        self.gui3d_frame.loadData(data)
+        # self.gui2d_frame.loadData(data)
 
 if __name__ == '__main__':
     data = data.Data(config.config)
