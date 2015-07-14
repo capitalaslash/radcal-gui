@@ -3,12 +3,14 @@
 import json
 
 config = {
-    u'grid_nx': 4,
-    u'grid_ny': 3,
-    u'grid_nz': 2,
+    u'grid_nx': 20,
+    u'grid_ny': 15,
+    u'grid_nz': 10,
 
     u'grid_origin': [0.0, 0.0, 0.0],
-    u'grid_length': [5.0, 3.0, 1.0]
+    u'grid_length': [5.0, 3.0, 1.0],
+
+    u'fileName': None
 }
 
 if __name__ == '__main__':
