@@ -2,17 +2,21 @@
 
 from vtk import *
 
-class Vtk3d(object):
+class VtkGui(object):
     """
-    Vtk3d gui
+    Vtk window manager
     """
 
-    def __init__(self):
+    def __init__(self, iren):
         """
         initialization of the interactor and fixed objects
         """
+        # interactor
+        self.iren = iren
+
         # empty defaults
         self.data = None
+        self.mapper3d = None
         self.scalarWidget = None
 
         # camera
@@ -28,22 +32,18 @@ class Vtk3d(object):
         self.lut.Build()
 
         # render window
-        self.renWin = vtkRenderWindow()
-        self.renWin.SetSize(800, 800)
-        self.renWin.SetNumberOfLayers(2)
+        self.renWin = self.iren.GetRenderWindow()
+        # self.renWin.SetSize(800, 800)
+        # self.renWin.SetNumberOfLayers(2)
 
         # main renderer
         self.ren = vtkRenderer()
-        self.ren.SetLayer(0)
+        # self.ren.SetLayer(0)
         self.ren.SetBackground(0.1, 0.2, 0.4)
         self.ren.SetActiveCamera(self.camera)
         self.renWin.AddRenderer(self.ren)
 
-    def setInteractor(self, iren):
-        """
-        set interactor (independent of used toolkit)
-        """
-        self.iren = iren
+        # set interaction style to paraview style
         self.iren.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
         # keyboard bindings
@@ -76,17 +76,18 @@ class Vtk3d(object):
         surface visualization of data
         """
         self.ren.RemoveAllViewProps()
+        self.marker.EnabledOn()
         activeScalar = self.data.grid.GetPointData().GetScalars()
         # print 'active scalar is', activeScalar.GetName()
 
         # viz
-        self.mainMapper = vtkDataSetMapper()
-        self.mainMapper.SetInputData(self.data.grid)
-        # self.mainMapper.SetScalarModeToUseCellData()
-        self.mainMapper.SetLookupTable(self.lut)
-        self.mainMapper.SetScalarRange(activeScalar.GetRange())
+        self.mapper3d = vtkDataSetMapper()
+        self.mapper3d.SetInputData(self.data.grid)
+        # self.mapper3d.SetScalarModeToUseCellData()
+        self.mapper3d.SetLookupTable(self.lut)
+        self.mapper3d.SetScalarRange(activeScalar.GetRange())
         self.mainActor = vtkLODActor()
-        self.mainActor.SetMapper(self.mainMapper)
+        self.mainActor.SetMapper(self.mapper3d)
 
         self.ren.AddActor(self.mainActor)
         self.ren.ResetCamera()
@@ -107,6 +108,7 @@ class Vtk3d(object):
         contour visualization of data
         """
         self.ren.RemoveAllViewProps()
+        self.marker.EnabledOn()
         activeScalar = self.data.grid.GetPointData().GetScalars()
         # print 'active scalar is', activeScalar.GetName()
 
@@ -120,12 +122,12 @@ class Vtk3d(object):
         self.contour.SetValue(0, mean)
 
         # viz
-        self.mainMapper = vtkDataSetMapper()
-        self.mainMapper.SetInputConnection(self.contour.GetOutputPort())
-        self.mainMapper.SetLookupTable(self.lut)
-        self.mainMapper.SetScalarRange(activeScalar.GetRange())
+        self.mapper3d = vtkDataSetMapper()
+        self.mapper3d.SetInputConnection(self.contour.GetOutputPort())
+        self.mapper3d.SetLookupTable(self.lut)
+        self.mapper3d.SetScalarRange(activeScalar.GetRange())
         self.mainActor = vtkLODActor()
-        self.mainActor.SetMapper(self.mainMapper)
+        self.mainActor.SetMapper(self.mapper3d)
 
         # outline
         outline = vtkOutlineFilter()
@@ -167,6 +169,64 @@ class Vtk3d(object):
 
         self.renWin.Render()
 
+    def plot(self, linePoints):
+        """
+        plot visualization of data
+        """
+        self.ren.RemoveAllViewProps()
+        self.marker.EnabledOff()
+        activeScalar = self.data.grid.GetPointData().GetScalars()
+        # print 'active scalar is', activeScalar.GetName()
+
+        line = vtkLineSource()
+        line.SetResolution(30)
+        line.SetPoint1(linePoints[0])
+        line.SetPoint2(linePoints[1])
+        probe = vtkProbeFilter()
+        probe.SetInputConnection(line.GetOutputPort())
+        probe.SetSourceData(self.data.grid)
+
+        tuber = vtkTubeFilter()
+        tuber.SetInputConnection(probe.GetOutputPort())
+        tuber.SetRadius(0.02)
+        lineMapper = vtkPolyDataMapper()
+        lineMapper.SetInputConnection(tuber.GetOutputPort())
+        lineActor = vtk.vtkActor()
+        lineActor.SetMapper(lineMapper)
+        # self.ren.AddActor(lineActor)
+
+        # outline
+        outline = vtkOutlineFilter()
+        outline.SetInputData(self.data.grid)
+        outlineMapper = vtkDataSetMapper()
+        outlineMapper.SetInputConnection(outline.GetOutputPort())
+        outlineActor = vtkActor()
+        outlineActor.SetMapper(outlineMapper)
+        outlineActor.GetProperty().SetColor(0.0, 0.0, 0.0)
+        # self.ren.AddActor(outlineActor)
+
+        xyplot = vtkXYPlotActor()
+        xyplot.AddDataSetInputConnection(probe.GetOutputPort())
+        xyplot.GetPositionCoordinate().SetValue(0.05, 0.05, 0.0)
+        xyplot.GetPosition2Coordinate().SetValue(0.9, 0.9, 0.0) #relative to Position
+        xyplot.SetXValuesToArcLength()
+        xyplot.SetNumberOfXLabels(6)
+        xyplot.SetNumberOfYLabels(6)
+        xyplot.SetTitle("title")
+        xyplot.SetXTitle("length")
+        xyplot.SetYTitle("var")
+        # xyplot.SetXRange(.1, .35)
+        # xyplot.SetYRange(.2, .4)
+        # xyplot.GetProperty().SetColor(0, 0, 0)
+        xyplot.GetProperty().SetLineWidth(2)
+        self.ren.AddActor2D(xyplot)
+        # self.xyplotWidget = vtkXYPlotWidget()
+        # self.xyplotWidget.SetXYPlotActor(xyplot)
+        # self.xyplotWidget.SetInteractor(self.iren)
+        # self.xyplotWidget.EnabledOn()
+
+        self.renWin.Render()
+
     def updateContour(self, obj, ev):
         value = self.sliderWidget.GetRepresentation().GetValue()
         self.contour.SetValue(0, value)
@@ -176,7 +236,8 @@ class Vtk3d(object):
         callback: activated on modifications to pointData in grid
         """
         activeScalar = self.data.grid.GetPointData().GetScalars()
-        self.mainMapper.SetScalarRange(activeScalar.GetRange())
+        if not self.mapper3d == None:
+            self.mapper3d.SetScalarRange(activeScalar.GetRange())
         scalarBarActor = vtkScalarBarActor()
         scalarBarActor.SetTitle(activeScalar.GetName())
         scalarBarActor.SetLookupTable(self.lut)
@@ -209,7 +270,7 @@ if __name__ == '__main__':
     from data import *
     data = Data(config)
 
-    app = Vtk3d()
+    app = VtkGui()
     app.loadData(data)
     iren = vtkRenderWindowInteractor()
     iren.SetRenderWindow(app.renWin)
