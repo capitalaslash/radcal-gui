@@ -77,12 +77,12 @@ class VtkGui(object):
         """
         self.ren.RemoveAllViewProps()
         self.marker.EnabledOn()
-        activeScalar = self.data.grid.GetPointData().GetScalars()
+        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
         # print 'active scalar is', activeScalar.GetName()
 
         # viz
         self.mapper3d = vtkDataSetMapper()
-        self.mapper3d.SetInputData(self.data.grid)
+        self.mapper3d.SetInputConnection(self.data.grid.GetOutputPort())
         # self.mapper3d.SetScalarModeToUseCellData()
         self.mapper3d.SetLookupTable(self.lut)
         self.mapper3d.SetScalarRange(activeScalar.GetRange())
@@ -110,12 +110,12 @@ class VtkGui(object):
         """
         self.ren.RemoveAllViewProps()
         self.marker.EnabledOn()
-        activeScalar = self.data.grid.GetPointData().GetScalars()
+        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
         # print 'active scalar is', activeScalar.GetName()
 
         # contour
         self.contour = vtkContourFilter()
-        self.contour.SetInputData(self.data.grid)
+        self.contour.SetInputConnection(self.data.grid.GetOutputPort())
         self.contour.SetNumberOfContours(1)
 
         scalarRange = activeScalar.GetRange()
@@ -132,7 +132,7 @@ class VtkGui(object):
 
         # outline
         outline = vtkOutlineFilter()
-        outline.SetInputData(self.data.grid)
+        outline.SetInputConnection(self.data.grid.GetOutputPort())
         outlineMapper = vtkDataSetMapper()
         outlineMapper.SetInputConnection(outline.GetOutputPort())
         outlineActor = vtkActor()
@@ -176,7 +176,7 @@ class VtkGui(object):
         """
         self.ren.RemoveAllViewProps()
         self.marker.EnabledOff()
-        activeScalar = self.data.grid.GetPointData().GetScalars()
+        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
         # print 'active scalar is', activeScalar.GetName()
 
         line = vtkLineSource()
@@ -185,7 +185,7 @@ class VtkGui(object):
         line.SetPoint2(linePoints[1])
         probe = vtkProbeFilter()
         probe.SetInputConnection(line.GetOutputPort())
-        probe.SetSourceData(self.data.grid)
+        probe.SetSourceConnection(self.data.grid.GetOutputPort())
 
         tuber = vtkTubeFilter()
         tuber.SetInputConnection(probe.GetOutputPort())
@@ -195,16 +195,6 @@ class VtkGui(object):
         lineActor = vtk.vtkActor()
         lineActor.SetMapper(lineMapper)
         # self.ren.AddActor(lineActor)
-
-        # outline
-        outline = vtkOutlineFilter()
-        outline.SetInputData(self.data.grid)
-        outlineMapper = vtkDataSetMapper()
-        outlineMapper.SetInputConnection(outline.GetOutputPort())
-        outlineActor = vtkActor()
-        outlineActor.SetMapper(outlineMapper)
-        outlineActor.GetProperty().SetColor(0.0, 0.0, 0.0)
-        # self.ren.AddActor(outlineActor)
 
         xyplot = vtkXYPlotActor()
         xyplot.AddDataSetInputConnection(probe.GetOutputPort())
@@ -236,7 +226,7 @@ class VtkGui(object):
         """
         callback: activated on modifications to pointData in grid
         """
-        activeScalar = self.data.grid.GetPointData().GetScalars()
+        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
         if not self.mapper3d == None:
             self.mapper3d.SetScalarRange(activeScalar.GetRange())
         scalarBarActor = vtkScalarBarActor()
@@ -251,20 +241,22 @@ class VtkGui(object):
         char = obj.GetKeyCode()
         # print 'pressed: ', char
         if char == '1':
-            self.data.grid.GetPointData().SetActiveScalars('c1')
+            self.data.grid.GetInput().GetPointData().SetActiveScalars('c1')
         elif char == '2':
-            self.data.grid.GetPointData().SetActiveScalars('c2')
+            self.data.grid.GetInput().GetPointData().SetActiveScalars('c2')
         elif char == '0':
-            self.data.grid.GetPointData().SetActiveScalars(None)
+            self.data.grid.GetInput().GetPointData().SetActiveScalars(None)
         elif char == 'r':
             self.render()
+        elif char == 'c':
+            self.renderContour()
         elif char == 'x':
             self.scalarWidget.SetEnabled(1-self.scalarWidget.GetEnabled())
         self.renWin.Render()
 
     def loadData(self, data):
         self.data = data
-        self.data.grid.GetPointData().AddObserver(vtkCommand.ModifiedEvent, self.pointDataModified)
+        self.data.grid.GetInput().GetPointData().AddObserver(vtkCommand.ModifiedEvent, self.pointDataModified)
 
 if __name__ == '__main__':
     from config import *
