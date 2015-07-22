@@ -4,7 +4,8 @@ import math
 from vtk import *
 
 class Data:
-    def __init__(self, config):
+    def __init__(self, **config):
+        print config
         self.config = config
 
     def read(self):
@@ -183,8 +184,7 @@ class Data:
 if __name__ == '__main__':
     from config import *
 
-    config['fileName'] = 'test_notime.dat'
-    data = Data(config)
+    data = Data(fileName='test_notime.dat')
 
     data.read()
 
