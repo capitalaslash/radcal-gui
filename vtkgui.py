@@ -86,6 +86,7 @@ class VtkGui(object):
         # self.mapper3d.SetScalarModeToUseCellData()
         self.mapper3d.SetLookupTable(self.lut)
         self.mapper3d.SetScalarRange(activeScalar.GetRange())
+        self.mapper3d.InterpolateScalarsBeforeMappingOn()
         self.mainActor = vtkLODActor()
         self.mainActor.SetMapper(self.mapper3d)
 
