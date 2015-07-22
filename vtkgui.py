@@ -259,15 +259,19 @@ class VtkGui(object):
         self.data.grid.GetInput().GetPointData().AddObserver(vtkCommand.ModifiedEvent, self.pointDataModified)
 
 if __name__ == '__main__':
-    from config import *
-    from data import *
-    data = Data(config)
+    import config
+    import data
+    data = data.Data(**config.config)
+    data.read()
 
-    app = VtkGui()
-    app.loadData(data)
+    renWin = vtkRenderWindow()
+    renWin.SetSize(config.config['vtkWidth'], config.config['vtkHeight'])
     iren = vtkRenderWindowInteractor()
-    iren.SetRenderWindow(app.renWin)
-    app.setInteractor(iren)
-    app.iren.Initialize()
-    app.renWin.Render()
-    app.iren.Start()
+    iren.SetRenderWindow(renWin)
+
+    app = VtkGui(iren)
+    app.loadData(data)
+
+    iren.Initialize()
+    renWin.Render()
+    iren.Start()
