@@ -7,29 +7,17 @@ class Data:
     def __init__(self, config):
         self.config = config
 
-        # self.initGrid()
-        # self.initPointData()
-        # self.initCellData()
-
     def read(self):
         f = open(self.config['fileName'])
 
-        self.grid = vtkUnstructuredGrid()
-
         # first line is number of points
         words = f.readline().split()
-        nx = int(words[2])
-        ny = int(words[4])
-        nz = int(words[6])
-        numPts = nx*ny*nz
-        print 'number of points =', numPts
-        numCells = (nx-1)*(ny-1)*(nz-1)
-        print 'number of cells  =', numCells
+        numPts = int(words[2])
 
         # second line is number of timesteps
         numTimes = int(f.readline().split()[2])
 
-        # third line used for titles
+        # third line used for var names
         titles = f.readline().split()
 
         # ignore '#', 'x', 'y', 'z', 't'
@@ -53,28 +41,43 @@ class Data:
             for v in range(0, numVars):
                 varList[v].SetValue(counter, float(words[4+v]))
             counter = counter+1
-        self.grid.SetPoints(pts)
 
+        # # build a fake unstructured grid
+        # self.grid = vtkUnstructuredGrid()
+        # self.grid.SetPoints(pts)
+        #
+        # self.grid.Allocate(numCells, numCells)
+        # for k in xrange(0, nz-1):
+        #     for j in xrange(0, ny-1):
+        #         for i in xrange(0, nx-1):
+        #             hexa = vtk.vtkHexahedron()
+        #             idx = i + nx*(j + ny*k)
+        #             hexa.GetPointIds().SetId(0, idx)
+        #             hexa.GetPointIds().SetId(1, idx+1)
+        #             hexa.GetPointIds().SetId(2, idx+1+nx)
+        #             hexa.GetPointIds().SetId(3, idx  +nx)
+        #             hexa.GetPointIds().SetId(4, idx     +nx*ny)
+        #             hexa.GetPointIds().SetId(5, idx+1   +nx*ny)
+        #             hexa.GetPointIds().SetId(6, idx+1+nx+nx*ny)
+        #             hexa.GetPointIds().SetId(7, idx+ +nx+nx*ny)
+        #             self.grid.InsertNextCell(hexa.GetCellType(),
+        #                 hexa.GetPointIds())
+        # for v in range(0, numVars):
+        #     self.grid.GetPointData().AddArray(varList[v])
+        # self.grid.GetPointData().SetActiveScalars(varList[0].GetName())
+
+        # delaunay
+        profile = vtkPolyData()
+        profile.SetPoints(pts)
         for v in range(0, numVars):
-            self.grid.GetPointData().AddArray(varList[v])
-        self.grid.GetPointData().SetActiveScalars(varList[0].GetName())
+            profile.GetPointData().AddArray(varList[v])
+        profile.GetPointData().SetActiveScalars(varList[0].GetName())
 
-        self.grid.Allocate(numCells, numCells)
-        for k in xrange(0, nz-1):
-            for j in xrange(0, ny-1):
-                for i in xrange(0, nx-1):
-                    hexa = vtk.vtkHexahedron()
-                    idx = i + nx*(j + ny*k)
-                    hexa.GetPointIds().SetId(0, idx)
-                    hexa.GetPointIds().SetId(1, idx+1)
-                    hexa.GetPointIds().SetId(2, idx+1+nx)
-                    hexa.GetPointIds().SetId(3, idx  +nx)
-                    hexa.GetPointIds().SetId(4, idx     +nx*ny)
-                    hexa.GetPointIds().SetId(5, idx+1   +nx*ny)
-                    hexa.GetPointIds().SetId(6, idx+1+nx+nx*ny)
-                    hexa.GetPointIds().SetId(7, idx+ +nx+nx*ny)
-                    self.grid.InsertNextCell(hexa.GetCellType(),
-                        hexa.GetPointIds())
+        self.grid = vtkDelaunay3D()
+        self.grid.SetInputData(profile)
+        self.grid.SetTolerance(0.01)
+        self.grid.SetAlpha(0.0)
+        self.grid.BoundingTriangulationOff()
 
     def initGrid(self):
         config = self.config
@@ -171,8 +174,8 @@ class Data:
         return varNames
 
     def write(self):
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-        writer.SetInputData(self.grid)
+        writer = vtk.vtkXMLDataSetWriter()
+        writer.SetInputConnection(self.grid.GetOutputPort())
         writer.SetFileName('grid.vtu')
         writer.SetDataModeToAscii()
         writer.Write()
