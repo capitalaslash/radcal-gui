@@ -119,7 +119,7 @@ class App(Frame):
             parent=self.frameFile,
             # title='title'
             )
-        self.data = Data(self.config)
+        self.data = Data(**self.config)
         self.data.read()
         self.loadData(self.data)
 
@@ -148,8 +148,8 @@ class App(Frame):
     def varModified(self, *args):
         idx = self.varList.curselection()[0]
         var = self.varList.get(idx)
-        # print 'setting ', var
-        self.vtk.data.grid.GetPointData().SetActiveScalars(var)
+        print 'setting ', var
+        self.vtk.data.grid.GetInput().GetPointData().SetActiveScalars(var)
         self.vtk.renWin.Render()
 
     def coordModified(self, *args):
@@ -177,7 +177,7 @@ class App(Frame):
 
 
     def buildLine(self):
-        bounds = self.data.grid.GetBounds()
+        bounds = self.data.grid.GetInput().GetBounds()
         line = [
             [bounds[0], bounds[2], bounds[4]],
             [bounds[1], bounds[3], bounds[5]],
@@ -231,7 +231,7 @@ class App(Frame):
         varNames = self.vtk.data.getVarList()
         for var in varNames:
             self.varList.insert('end', var)
-        bounds = self.data.grid.GetBounds()
+        bounds = self.data.grid.GetInput().GetBounds()
         coordBounds = {}
         coordBounds['x'] = [bounds[0], bounds[1]]
         coordBounds['y'] = [bounds[2], bounds[3]]
