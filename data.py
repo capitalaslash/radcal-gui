@@ -166,7 +166,7 @@ class Data:
         self.grid.GetPointData().AddArray(idData)
 
     def getVarList(self):
-        pointData = self.grid.GetPointData()
+        pointData = self.grid.GetInput().GetPointData()
         numVars = pointData.GetNumberOfComponents()
         varNames = []
         for i in range(0, numVars):
