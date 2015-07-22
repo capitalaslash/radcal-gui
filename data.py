@@ -1,11 +1,11 @@
 #! /usr/bin/env python2
 
 import math
-from vtk import *
+import vtk
 
 class Data:
     def __init__(self, **config):
-        print config
+        print 'data configuration:', config
         self.config = config
 
     def read(self):
@@ -27,12 +27,12 @@ class Data:
         for v in range(0, numVars):
             name = titles[5+v]
             print 'creating array', name
-            var = vtkFloatArray()
+            var = vtk.vtkFloatArray()
             var.SetName(name)
             var.SetNumberOfValues(numPts)
             varList.append(var)
 
-        pts = vtkPoints()
+        pts = vtk.vtkPoints()
         pts.SetNumberOfPoints(numPts)
         counter = 0
         for line in f:
@@ -44,7 +44,7 @@ class Data:
             counter = counter+1
 
         # # build a fake unstructured grid
-        # self.grid = vtkUnstructuredGrid()
+        # self.grid = vtk.vtkUnstructuredGrid()
         # self.grid.SetPoints(pts)
         #
         # self.grid.Allocate(numCells, numCells)
@@ -68,13 +68,13 @@ class Data:
         # self.grid.GetPointData().SetActiveScalars(varList[0].GetName())
 
         # delaunay
-        profile = vtkPolyData()
+        profile = vtk.vtkPolyData()
         profile.SetPoints(pts)
         for v in range(0, numVars):
             profile.GetPointData().AddArray(varList[v])
         profile.GetPointData().SetActiveScalars(varList[0].GetName())
 
-        self.grid = vtkDelaunay3D()
+        self.grid = vtk.vtkDelaunay3D()
         self.grid.SetInputData(profile)
         self.grid.SetTolerance(0.01)
         self.grid.SetAlpha(0.0)
@@ -91,25 +91,25 @@ class Data:
 
         h = [(l[0]-o[0])/nx, (l[1]-o[1])/ny, (l[2]-o[2])/nz]
 
-        xCoords = vtkFloatArray()
+        xCoords = vtk.vtkFloatArray()
         xCoords.SetName('xCoords')
         xCoords.SetNumberOfValues(nx+1)
         for i in xrange(0, nx+1):
             xCoords.SetValue(i, o[0] + h[0]*i)
 
-        yCoords = vtkFloatArray()
+        yCoords = vtk.vtkFloatArray()
         yCoords.SetName('yCoords')
         yCoords.SetNumberOfValues(ny+1)
         for j in xrange(0, ny+1):
             yCoords.SetValue(j, o[1] + h[1]*j)
 
-        zCoords = vtkFloatArray()
+        zCoords = vtk.vtkFloatArray()
         zCoords.SetName('zCoords')
         zCoords.SetNumberOfValues(nz+1)
         for k in xrange(0, nz+1):
             zCoords.SetValue(k, o[2] + h[2]*k)
 
-        self.grid = grid = vtkRectilinearGrid()
+        self.grid = grid = vtk.vtkRectilinearGrid()
         grid.SetDimensions(nx+1, ny+1, nz+1)
         grid.SetXCoordinates(xCoords)
         grid.SetYCoordinates(yCoords)
@@ -118,7 +118,7 @@ class Data:
     def initCellData(self):
         numCells = self.grid.GetNumberOfCells()
 
-        idData = vtkIntArray()
+        idData = vtk.vtkIntArray()
         idData.SetName('id')
         idData.SetNumberOfValues(numCells)
         for i in xrange(0, numCells):
@@ -137,10 +137,10 @@ class Data:
         sigma2 = 1.6
 
         numPts = grid.GetNumberOfPoints()
-        c1 = vtkFloatArray()
+        c1 = vtk.vtkFloatArray()
         c1.SetName('c1')
         c1.SetNumberOfTuples(numPts)
-        c2 = vtkFloatArray()
+        c2 = vtk.vtkFloatArray()
         c2.SetName('c2')
         c2.SetNumberOfTuples(numPts)
         for i in xrange(0, numPts):
@@ -158,7 +158,7 @@ class Data:
 
         numPoints = self.grid.GetNumberOfPoints()
 
-        idData = vtkIntArray()
+        idData = vtk.vtkIntArray()
         idData.SetName('id')
         idData.SetNumberOfValues(numPoints)
         for i in xrange(0, numPoints):
