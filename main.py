@@ -2,85 +2,84 @@
 
 import os
 
-from vtk import *
+import vtk
 from vtk.tk.vtkTkRenderWindowInteractor import vtkTkRenderWindowInteractor
 
-from Tkinter import *
+import Tkinter as tk
 import tkFileDialog
 # import ttk
 
 import config
-from data import *
+import data
 import vtkgui
 
-class App(Frame):
+class App(tk.Frame):
     def __init__(self, parent, config):
         self.config = config
-        Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent)
         self.parent = parent
         self.pack(fill='both', expand=1)
 
         # top section
-        self.frameFile = Frame(self, bd=1, relief='sunken')
+        self.frameFile = tk.Frame(self, bd=1, relief='sunken')
         self.frameFile.pack(fill='x', expand=0)
 
-        buttonFileOpen = Button(self.frameFile, text='Open file', command=self.openFile)
+        buttonFileOpen = tk.Button(self.frameFile, text='Open file', command=self.openFile)
         buttonFileOpen.pack(side='left')
 
-        Label(self.frameFile, text='file name here').pack(side='left')
+        tk.Label(self.frameFile, text='file name here').pack(side='left')
 
         # middle section
-        frameMain = Frame(self)
+        frameMain = tk.Frame(self)
         frameMain.pack(fill='both', expand=1)
 
-        renWin = vtkRenderWindow()
+        renWin = vtk.vtkRenderWindow()
         iren = vtkTkRenderWindowInteractor(frameMain, rw=renWin,
             width=600, height=600)
         self.vtk = vtkgui.VtkGui(iren)
         iren.pack(side='left', fill='both', expand=1)
 
-        frameControl = Frame(frameMain)
+        frameControl = tk.Frame(frameMain)
         frameControl.pack(side='left')
 
-        frameDim = Frame(frameControl)
+        frameDim = tk.Frame(frameControl)
         frameDim.pack(fill='x', expand=0)
-        self.varDim = IntVar()
+        self.varDim = tk.IntVar()
         self.varDim.set(3)
-        Radiobutton(frameDim, text='2D', variable=self.varDim, value=2,
+        tk.Radiobutton(frameDim, text='2D', variable=self.varDim, value=2,
             command=self.dimModified).pack(side='left', fill='x', expand=1)
-        Radiobutton(frameDim, text='3D', variable=self.varDim, value=3,
+        tk.Radiobutton(frameDim, text='3D', variable=self.varDim, value=3,
             command=self.dimModified).pack(side='right', fill='x', expand=1)
 
-        buttonRender = Button(frameControl, text='Render', command=self.render)
-        buttonRender.pack(fill='x', expand=0)
+        tk.Button(frameControl, text='Render', command=self.render).pack(fill='x', expand=0)
 
-        self.buttonClear = Button(frameControl, text='Clear',
+        self.buttonClear = tk.Button(frameControl, text='Clear',
             command=self.clear)
         self.buttonClear.pack(fill='x', expand=0)
 
-        self.varScalarBar = IntVar()
-        self.checkScalarBar = Checkbutton(frameControl, text='Scalar Bar',
+        self.varScalarBar = tk.IntVar()
+        self.checkScalarBar = tk.Checkbutton(frameControl, text='Scalar Bar',
             variable=self.varScalarBar, command=self.scalarBarModified)
         self.checkScalarBar.pack(fill='x')
 
-        self.varContour = IntVar()
-        self.checkContour = Checkbutton(frameControl, text='Contour',
+        self.varContour = tk.IntVar()
+        self.checkContour = tk.Checkbutton(frameControl, text='Contour',
             variable=self.varContour, command=self.contourModified)
         self.checkContour.pack(fill='x')
 
-        Label(frameControl, text='Variables:').pack()
-        self.varList = Listbox(frameControl, selectmode='browse')
+        tk.Label(frameControl, text='Variables:').pack()
+        self.varList = tk.Listbox(frameControl, selectmode='browse')
         self.varList.bind('<<ListboxSelect>>', self.varModified)
         self.varList.pack(fill='x')
 
-        Label(frameControl, text='Probing line:').pack()
-        self.frameProbe = Frame(frameControl)
+        tk.Label(frameControl, text='Probing line:').pack()
+        self.frameProbe = tk.Frame(frameControl)
         self.frameProbe.pack(fill='x',expand=1)
 
         validateFloat = (self.parent.register(self.validateFloat),
             '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
-        self.varCoord = StringVar()
+        self.varCoord = tk.StringVar()
         self.varCoord.set('t')
 
         coordTab = [ 'x', 'y', 'z', 't' ]
@@ -90,20 +89,20 @@ class App(Frame):
         self.coordRadios = {}
         self.coordLabels = {}
         for c in coordTab:
-            self.coordRadios[c] = Radiobutton(self.frameProbe, text=c,
+            self.coordRadios[c] = tk.Radiobutton(self.frameProbe, text=c,
                 variable=self.varCoord, value=c, command=self.coordModified)
             self.coordRadios[c].grid(row=counter, column=0)
-            self.coordEntries[c] = Entry(self.frameProbe,
+            self.coordEntries[c] = tk.Entry(self.frameProbe,
                 validate='key', validatecommand=validateFloat)
             self.coordEntries[c].grid(row=counter, column=1)
-            self.coordLabels[c] = StringVar()
-            Label(self.frameProbe, textvariable=self.coordLabels[c]).grid(row=counter, column=2)
+            self.coordLabels[c] = tk.StringVar()
+            tk.Label(self.frameProbe, textvariable=self.coordLabels[c]).grid(row=counter, column=2)
 
             counter = counter+1
 
         # bottom section
-        frameButton = Frame(self, bd=1, relief='sunken')
-        buttonQuit = Button(frameButton, text='quit',
+        frameButton = tk.Frame(self, bd=1, relief='sunken')
+        buttonQuit = tk.Button(frameButton, text='quit',
             command=self.parent.quit, padx=5, pady=5)
         buttonQuit.pack(side='right')
 
@@ -119,7 +118,7 @@ class App(Frame):
             parent=self.frameFile,
             # title='title'
             )
-        self.data = Data(**self.config)
+        self.data = data.Data(**self.config)
         self.data.read()
         self.loadData(self.data)
 
@@ -175,7 +174,6 @@ class App(Frame):
                 self.vtk.plot(self.buildLine())
         self.buttonClear['state']='normal'
 
-
     def buildLine(self):
         bounds = self.data.grid.GetInput().GetBounds()
         line = [
@@ -227,7 +225,7 @@ class App(Frame):
     def loadData(self, data):
         self.vtk.loadData(data)
         self.data = data
-        self.varList.delete(0, END)
+        self.varList.delete(0, 'end')
         varNames = self.vtk.data.getVarList()
         for var in varNames:
             self.varList.insert('end', var)
@@ -246,6 +244,6 @@ class App(Frame):
 if __name__ == '__main__':
     # data = data.Data(config.config)
 
-    root = Tk()
+    root = tk.Tk()
     app = App(root, config.config)
     root.mainloop()
