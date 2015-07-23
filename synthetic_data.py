@@ -45,24 +45,37 @@ class Grid(object):
                     counter += 1
         self.numPoints = counter
 
+class TimeRange(object):
+    def __init__(self, **opts):
+        ti = opts['ti']
+        tf = opts['tf']
+        dt = opts['dt']
+        self.nt = 1+int((tf-ti)/dt)
+        self.times = []
+
+        for i in range(0, self.nt):
+            self.times.append(ti + i*dt)
+
 class Function(object):
-    def __init__(self, grid, fun):
+    def __init__(self, fun, grid, time):
         self.values = []
 
-        for i in range(0, grid.numPoints):
-            self.values.append(fun(grid.points[i]))
+        for t in range(0, time.nt):
+            values = []
+            for i in range(0, grid.numPoints):
+                values.append(fun(grid.points[i], time.times[t]))
+            self.values.append(values)
 
+def fun1(p, t):
+    return math.exp(p.x)*(1.0-t)
 
-def fun1(p):
-    return math.exp(p.x)
-
-def fun2(p):
+def fun2(p, t):
     return 1.0 + 0.05*p.x + 0.1*p.y + 0.6*p.z
 
 c = Point(0.5, 0.2, 0.0)
 s = 1.2
-def fun3(p):
-    return math.exp(-((p-c)*(p-c))/(2*s*s))/(math.sqrt(2*math.pi)*s)
+def fun3(p, t):
+    return math.exp(-((p-c)*(p-c))/(2*s*s))/(math.sqrt(2*math.pi)*s)*(1.0-t)
 
 
 if __name__ == '__main__':
@@ -71,16 +84,19 @@ if __name__ == '__main__':
         'l': [2.0, 3.0, 1.0]}
     grid = Grid(**opts)
 
-    f1 = Function(grid, fun1)
-    f2 = Function(grid, fun2)
-    f3 = Function(grid, fun3)
+    time = TimeRange(ti=0.0, tf=1.0, dt=0.2)
+
+    f1 = Function(fun1, grid, time)
+    f2 = Function(fun2, grid, time)
+    f3 = Function(fun3, grid, time)
 
     # print
     f = open('test.dat', 'w')
     f.write('# points ' + str(grid.numPoints) + '\n')
     f.write('# times ' + str(1) + '\n')
     f.write('# x y z t c1 c2 c3\n')
-    for i in range(0, grid.numPoints):
-        p = grid.points[i]
-        f.write(str(p.x) + ' ' + str(p.y) + ' ' + str(p.z) + ' ' + str(0.0) + ' ' + str(f1.values[i]) + ' ' + str(f2.values[i]) + ' ' + str(f3.values[i]) + '\n')
+    for t in range(0, time.nt):
+        for i in range(0, grid.numPoints):
+            p = grid.points[i]
+            f.write('{:e} {:e} {:e} {:e} {:e} {:e} {:e}\n'.format(p.x, p.y, p.z, time.times[t], f1.values[t][i], f2.values[t][i], f3.values[t][i]))
     f.close()
