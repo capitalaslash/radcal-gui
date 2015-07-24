@@ -1,0 +1,13 @@
+graph {
+    camera -- renderer -- renWin -- iren;
+    iren -- {markerWidget scalarBarWidget sliderWidget};
+    markerWidget -- axesActor;
+    scalarBarWidget -- scalarBarActor -- lut;
+    sliderWidget -- sliderRep;
+    mapper3d -- lut;
+    contourFilter -- mainActor;
+    mainActor -- mapper3d;
+    outlineActor -- outlineMapper;
+    renderer -- {mainActor outlineActor};
+}
+
