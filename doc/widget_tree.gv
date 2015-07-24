@@ -1,0 +1,41 @@
+graph {
+    //nodesep=2.0
+
+    node [style=filled, color=orange, fontname="Droid Sans Mono"];
+
+    // widgets
+    edge [len=3.5];
+    {frameFile frameMain frameButton} -- App;
+    edge [len=2.5];
+    {buttonFileOpen Label_varFileName} -- frameFile;
+    {vtk_iren frameControl} -- frameMain;
+    {Button_Quit Button_Print} -- frameButton;
+    edge [len=2];
+    varFileName -- Label_varFileName;
+    {frameDim Button_Render buttonClear checkScalarBar checkContour
+        Label_Variables varList Label_probingLine frameProbe} -- frameControl;
+    varDim -- {Radiobutton_2D Radiobutton_3D} -- frameDim;
+    varScalarBar -- checkScalarBar;
+    varContour -- checkContour;
+    {coordRadios coordEntries Label_coordLabels} -- frameProbe;
+    varCoord -- coordRadios;
+    coordLabels -- Label_coordLabels;
+    "tkFileDialog.askopenfilename";
+    "tkFileDialog.asksaveasfilename";
+
+    // commands
+    node [shape=rectangle, color=skyblue];
+    {"tkFileDialog.askopenfilename" loadData} -- openFile -- buttonFileOpen;
+    dimModified -- {Radiobutton_2D Radiobutton_3D};
+    buildLine -- render -- Button_Render;
+    clear -- buttonClear;
+    scalarBarModified -- checkScalarBar;
+    contourModified -- checkContour;
+    varModified -- varList;
+    coordModified -- coordRadios;
+    validateFloat -- coordEntries;
+    "parent.quit" -- Button_Quit;
+    "tkFileDialog.asksaveasfilename" -- write -- Button_Print;
+    initKShourtcuts -- App;
+}
+
