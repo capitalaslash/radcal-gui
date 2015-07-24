@@ -36,14 +36,12 @@ class Data:
 
         pts = vtk.vtkPoints()
         pts.SetNumberOfPoints(numPts)
-        counter = 0
-        for line in f:
-            words = line.split()
+        for i in xrange(0, numPts):
+            words = f.readline().split()
             p = [float(words[0]), float(words[1]), float(words[2])]
-            pts.SetPoint(counter, p)
+            pts.SetPoint(i, p)
             for v in range(0, numVars):
-                varList[v].SetValue(counter, float(words[4+v]))
-            counter = counter+1
+                varList[v].SetValue(i, float(words[4+v]))
 
         # # build a fake unstructured grid
         # self.grid = vtk.vtkUnstructuredGrid()
