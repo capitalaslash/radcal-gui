@@ -98,14 +98,12 @@ class App(tk.Frame):
             self.coordEntries[c].grid(row=counter, column=1)
             self.coordLabels[c] = tk.StringVar()
             tk.Label(self.frameProbe, textvariable=self.coordLabels[c]).grid(row=counter, column=2)
-
-            counter = counter+1
+            counter += 1
 
         # bottom section
-        frameButton = tk.Frame(self, bd=1, relief='sunken')
-        buttonQuit = tk.Button(frameButton, text='quit',
-            command=self.parent.quit, padx=5, pady=5)
-        buttonQuit.pack(side='right')
+        self.frameButton = tk.Frame(self, bd=1, relief='sunken')
+        self.frameButton.pack(fill='x', expand=0)
+        tk.Button(self.frameButton, text='Quit', command=self.parent.quit, padx=5, pady=5).pack(side='right')
 
         self.clear()
         self.initKShortcuts()
