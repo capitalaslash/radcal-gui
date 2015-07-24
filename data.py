@@ -174,10 +174,10 @@ class Data:
         print varNames
         return varNames
 
-    def write(self):
+    def write(self, fileName):
         writer = vtk.vtkXMLDataSetWriter()
         writer.SetInputConnection(self.grid.GetOutputPort())
-        writer.SetFileName('grid.vtu')
+        writer.SetFileName(fileName)
         writer.SetDataModeToAscii()
         writer.Write()
 
@@ -188,4 +188,4 @@ if __name__ == '__main__':
 
     data.read()
 
-    data.write()
+    data.write('grid.vtu')

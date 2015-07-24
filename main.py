@@ -250,7 +250,8 @@ class App(tk.Frame):
             initialfile='grid.vtu',
             parent=self.frameButton,
         )
-        self.data.write()
+        if fileName is not None:
+            self.data.write(fileName)
 
 if __name__ == '__main__':
     # data = data.Data(config.config)
