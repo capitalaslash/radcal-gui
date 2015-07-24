@@ -30,11 +30,12 @@ class Data:
         varNames = []
         for v in range(0, numVars):
             varNames.append(titles[5+v])
+        print 'variables:', varNames
+
 
         for t in xrange(0, self.numTimes):
             varList = []
             for v in range(0, numVars):
-                print 'creating array', varNames[v]
                 var = vtk.vtkFloatArray()
                 var.SetName(varNames[v])
                 var.SetNumberOfValues(numPts)
