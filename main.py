@@ -27,7 +27,8 @@ class App(tk.Frame):
         buttonFileOpen = tk.Button(self.frameFile, text='Open file', command=self.openFile)
         buttonFileOpen.pack(side='left')
 
-        tk.Label(self.frameFile, text='file name here').pack(side='left')
+        self.varFileName = tk.StringVar()
+        tk.Label(self.frameFile, textvariable=self.varFileName).pack(side='left')
 
         # middle section
         frameMain = tk.Frame(self)
@@ -110,7 +111,7 @@ class App(tk.Frame):
         self.initKShortcuts()
 
     def openFile(self):
-        self.config[u'fileName'] = tkFileDialog.askopenfilename(
+        fileName = tkFileDialog.askopenfilename(
             defaultextension='.dat',
             filetypes=[('dat files', '.dat'), ('all files', '.*')],
             initialdir=os.getcwd(),
@@ -118,6 +119,8 @@ class App(tk.Frame):
             parent=self.frameFile,
             # title='title'
             )
+        self.varFileName.set(fileName)
+        self.config[u'fileName'] = fileName
         self.data = data.Data(**self.config)
         self.data.read()
         self.loadData(self.data)
@@ -239,7 +242,6 @@ class App(tk.Frame):
         for c in coordBounds:
             text = '[' + str(coordBounds[c][0]) + ', ' + str(coordBounds[c][1]) + ']'
             self.coordLabels[c].set(text)
-
 
 if __name__ == '__main__':
     # data = data.Data(config.config)
