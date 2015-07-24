@@ -1,6 +1,7 @@
 #! /usr/bin/env python2
 
 import vtk
+import time
 
 class VtkGui(object):
     """
@@ -16,8 +17,7 @@ class VtkGui(object):
 
         # empty defaults
         self.data = None
-        self.mapper3d = None
-        self.scalarWidget = None
+        self.currentTimeStep = 0
 
         # camera
         self.camera = vtk.vtkCamera()
@@ -30,6 +30,20 @@ class VtkGui(object):
         self.lut = vtk.vtkLookupTable()
         self.lut.SetHueRange(0.66667, 0.0)
         self.lut.Build()
+
+        # 3d mapper
+        self.mapper3d = vtk.vtkDataSetMapper()
+        self.mapper3d.SetLookupTable(self.lut)
+        self.mapper3d.InterpolateScalarsBeforeMappingOn()
+
+        # contour
+        self.contour = vtk.vtkContourFilter()
+        self.contour.SetNumberOfContours(1)
+
+        # actors
+        self.mainActor = vtk.vtkLODActor()
+        self.mainActor.SetMapper(self.mapper3d)
+        self.outlineActor = vtk.vtkActor()
 
         # render window
         self.renWin = self.iren.GetRenderWindow()
@@ -54,15 +68,34 @@ class VtkGui(object):
     def addWidgets(self):
         # axes
         axes = vtk.vtkAxesActor()
-        self.marker = vtk.vtkOrientationMarkerWidget()
-        self.marker.SetInteractor(self.iren)
-        self.marker.SetOrientationMarker(axes)
-        self.marker.SetViewport(0.0, 0.0, 0.25, 0.25)
-        self.marker.EnabledOn()
+        self.markerWidget = vtk.vtkOrientationMarkerWidget()
+        self.markerWidget.SetInteractor(self.iren)
+        self.markerWidget.SetOrientationMarker(axes)
+        self.markerWidget.SetViewport(0.0, 0.0, 0.25, 0.25)
+        self.markerWidget.EnabledOn()
 
         # scalar bar
-        self.scalarWidget = vtk.vtkScalarBarWidget()
-        self.scalarWidget.SetInteractor(self.iren)
+        self.scalarBarActor = vtk.vtkScalarBarActor()
+        self.scalarBarActor.SetLookupTable(self.lut)
+        self.scalarBarWidget = vtk.vtkScalarBarWidget()
+        self.scalarBarWidget.SetInteractor(self.iren)
+        self.scalarBarWidget.SetScalarBarActor(self.scalarBarActor)
+
+        # contour slider
+        self.sliderRep = vtk.vtkSliderRepresentation2D()
+        self.sliderRep.SetTitleText("contour")
+        self.sliderRep.GetPoint1Coordinate().SetCoordinateSystemToNormalizedViewport()
+        self.sliderRep.GetPoint1Coordinate().SetValue(0.65, 0.1)
+        self.sliderRep.GetPoint2Coordinate().SetCoordinateSystemToNormalizedViewport()
+        self.sliderRep.GetPoint2Coordinate().SetValue(0.95, 0.1)
+
+        self.sliderWidget = vtk.vtkSliderWidget()
+        self.sliderWidget.SetInteractor(self.iren)
+        self.sliderWidget.SetRepresentation(self.sliderRep)
+        self.sliderWidget.SetAnimationModeToAnimate()
+        self.sliderWidget.AddObserver(vtk.vtkCommand.InteractionEvent,
+            self.updateContour);
+        # self.sliderWidget.EnabledOn()
 
     def clear(self):
         """
@@ -75,33 +108,11 @@ class VtkGui(object):
         """
         surface visualization of data
         """
-        self.ren.RemoveAllViewProps()
-        self.marker.EnabledOn()
-        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
-        # print 'active scalar is', activeScalar.GetName()
-
-        # viz
-        self.mapper3d = vtk.vtkDataSetMapper()
-        self.mapper3d.SetInputConnection(self.data.grid.GetOutputPort())
-        # self.mapper3d.SetScalarModeToUseCellData()
-        self.mapper3d.SetLookupTable(self.lut)
-        self.mapper3d.SetScalarRange(activeScalar.GetRange())
-        self.mapper3d.InterpolateScalarsBeforeMappingOn()
-        self.mainActor = vtk.vtkLODActor()
-        self.mainActor.SetMapper(self.mapper3d)
-
+        print 'rendering timestep', self.currentTimeStep
+        self.ren.RemoveActor(self.outlineActor)
+        self.sliderWidget.EnabledOff()
+        self.mapper3d.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
         self.ren.AddActor(self.mainActor)
-        self.ren.ResetCamera()
-
-        # set up scalar bar
-        scalarBarActor = vtk.vtkScalarBarActor()
-        scalarBarActor.SetTitle(activeScalar.GetName())
-        scalarBarActor.SetLookupTable(self.lut)
-        self.scalarWidget.SetScalarBarActor(scalarBarActor)
-        if self.scalarWidget.GetEnabled():
-            self.scalarWidget.EnabledOff()
-            self.scalarWidget.EnabledOn()
-
         self.renWin.Render()
 
     def renderContour(self):
@@ -109,75 +120,40 @@ class VtkGui(object):
         contour visualization of data
         """
         self.ren.RemoveAllViewProps()
-        self.marker.EnabledOn()
-        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
-        # print 'active scalar is', activeScalar.GetName()
+        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
 
-        # contour
-        self.contour = vtk.vtkContourFilter()
-        self.contour.SetInputConnection(self.data.grid.GetOutputPort())
-        self.contour.SetNumberOfContours(1)
+        self.contour.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
 
         scalarRange = activeScalar.GetRange()
         mean = 0.5*(scalarRange[0]+scalarRange[1])
         self.contour.SetValue(0, mean)
 
         # viz
-        self.mapper3d = vtk.vtkDataSetMapper()
         self.mapper3d.SetInputConnection(self.contour.GetOutputPort())
-        self.mapper3d.SetLookupTable(self.lut)
-        self.mapper3d.SetScalarRange(activeScalar.GetRange())
-        self.mainActor = vtk.vtkLODActor()
-        self.mainActor.SetMapper(self.mapper3d)
+        self.ren.AddActor(self.mainActor)
 
-        # outline
+        self.addOutline()
+
+        self.updateContourRange()
+        self.sliderRep.SetValue(mean)
+        self.sliderWidget.EnabledOn()
+        self.renWin.Render()
+
+    def addOutline(self):
         outline = vtk.vtkOutlineFilter()
-        outline.SetInputConnection(self.data.grid.GetOutputPort())
+        outline.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
         outlineMapper = vtk.vtkDataSetMapper()
         outlineMapper.SetInputConnection(outline.GetOutputPort())
-        outlineActor = vtk.vtkActor()
-        outlineActor.SetMapper(outlineMapper)
-
-        self.ren.AddActor(self.mainActor)
-        self.ren.AddActor(outlineActor)
-        self.ren.ResetCamera()
-
-        sliderRep = vtk.vtkSliderRepresentation2D()
-        sliderRep.SetMinimumValue(scalarRange[0])
-        sliderRep.SetMaximumValue(scalarRange[1])
-        sliderRep.SetValue(mean)
-        sliderRep.SetTitleText("contour")
-        sliderRep.GetPoint1Coordinate().SetCoordinateSystemToNormalizedViewport()
-        sliderRep.GetPoint1Coordinate().SetValue(0.7, 0.1)
-        sliderRep.GetPoint2Coordinate().SetCoordinateSystemToNormalizedViewport()
-        sliderRep.GetPoint2Coordinate().SetValue(1.0, 0.1)
-
-        self.sliderWidget = vtk.vtkSliderWidget()
-        self.sliderWidget.SetInteractor(self.iren)
-        self.sliderWidget.SetRepresentation(sliderRep)
-        self.sliderWidget.SetAnimationModeToAnimate()
-        self.sliderWidget.EnabledOn()
-        self.sliderWidget.AddObserver(vtk.vtkCommand.InteractionEvent,
-            self.updateContour);
-
-        # set up scalar bar
-        scalarBarActor = vtk.vtkScalarBarActor()
-        scalarBarActor.SetTitle(activeScalar.GetName())
-        scalarBarActor.SetLookupTable(self.lut)
-        self.scalarWidget.SetScalarBarActor(scalarBarActor)
-        if self.scalarWidget.GetEnabled():
-            self.scalarWidget.EnabledOff()
-            self.scalarWidget.EnabledOn()
-
-        self.renWin.Render()
+        self.outlineActor.SetMapper(outlineMapper)
+        self.ren.AddActor(self.outlineActor)
 
     def plot(self, linePoints):
         """
         plot visualization of data
         """
         self.ren.RemoveAllViewProps()
-        self.marker.EnabledOff()
-        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
+        # self.markerWidget.EnabledOff()
+        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
         # print 'active scalar is', activeScalar.GetName()
 
         line = vtk.vtkLineSource()
@@ -186,7 +162,7 @@ class VtkGui(object):
         line.SetPoint2(linePoints[1])
         probe = vtk.vtkProbeFilter()
         probe.SetInputConnection(line.GetOutputPort())
-        probe.SetSourceConnection(self.data.grid.GetOutputPort())
+        probe.SetSourceConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
 
         tuber = vtk.vtkTubeFilter()
         tuber.SetInputConnection(probe.GetOutputPort())
@@ -227,13 +203,13 @@ class VtkGui(object):
         """
         callback: activated on modifications to pointData in grid
         """
-        activeScalar = self.data.grid.GetInput().GetPointData().GetScalars()
-        if not self.mapper3d == None:
-            self.mapper3d.SetScalarRange(activeScalar.GetRange())
-        scalarBarActor = vtk.vtkScalarBarActor()
-        scalarBarActor.SetTitle(activeScalar.GetName())
-        scalarBarActor.SetLookupTable(self.lut)
-        self.scalarWidget.SetScalarBarActor(scalarBarActor)
+        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
+        # if not self.mapper3d == None:
+        #     self.mapper3d.SetScalarRange(activeScalar.GetRange())
+        # scalarBarActor = vtk.vtkScalarBarActor()
+        # scalarBarActor.SetTitle(activeScalar.GetName())
+        # scalarBarActor.SetLookupTable(self.lut)
+        # self.scalarBarWidget.SetScalarBarActor(scalarBarActor)
 
     def onKeyPress(self, obj, ev):
         """
@@ -242,22 +218,69 @@ class VtkGui(object):
         char = obj.GetKeyCode()
         # print 'pressed: ', char
         if char == '1':
-            self.data.grid.GetInput().GetPointData().SetActiveScalars('c1')
+            self.changeActiveScalar('c1')
         elif char == '2':
-            self.data.grid.GetInput().GetPointData().SetActiveScalars('c2')
-        elif char == '0':
-            self.data.grid.GetInput().GetPointData().SetActiveScalars(None)
+            self.changeActiveScalar('c2')
+        elif char == '3':
+            self.changeActiveScalar('c3')
         elif char == 'r':
+            self.updateScalarBar()
             self.render()
         elif char == 'c':
             self.renderContour()
+        elif char == 's':
+            self.scalarBarWidget.SetEnabled(1-self.scalarBarWidget.GetEnabled())
+            self.renWin.Render()
+        elif char == 'a':
+            self.updateScalarBar()
+            self.renWin.Render()
+        elif char == 'p':
+            self.play()
+        elif char == 'j':
+            self.next()
+        elif char == 'k':
+            self.prev()
         elif char == 'x':
-            self.scalarWidget.SetEnabled(1-self.scalarWidget.GetEnabled())
+            self.clear()
+
+    def changeActiveScalar(self, name):
+        for t in xrange(0, self.data.numTimes):
+            self.data.grid[t].GetInput().GetPointData().SetActiveScalars(name)
+        self.updateScalarBar()
+        self.updateContourRange()
         self.renWin.Render()
+
+    def updateScalarBar(self):
+        # resetRange = kwargs.get('resetRange', False)
+        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
+        self.scalarBarActor.SetTitle(activeScalar.GetName())
+        self.mapper3d.SetScalarRange(activeScalar.GetRange())
+
+    def updateContourRange(self):
+        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
+        scalarRange = activeScalar.GetRange()
+        self.sliderRep.SetMinimumValue(scalarRange[0])
+        self.sliderRep.SetMaximumValue(scalarRange[1])
+
+    def next(self):
+        if not self.currentTimeStep == self.data.numTimes-1:
+            self.currentTimeStep += 1
+            self.render()
+
+    def prev(self):
+        if not self.currentTimeStep == 0:
+            self.currentTimeStep -= 1
+            self.render()
+
+    def play(self):
+        for t in xrange(0, self.data.numTimes):
+            self.currentTimeStep = t
+            self.render()
+            time.sleep(1)
 
     def loadData(self, data):
         self.data = data
-        self.data.grid.GetInput().GetPointData().AddObserver(
+        self.data.grid[self.currentTimeStep].GetInput().GetPointData().AddObserver(
             vtk.vtkCommand.ModifiedEvent, self.pointDataModified)
 
 if __name__ == '__main__':
