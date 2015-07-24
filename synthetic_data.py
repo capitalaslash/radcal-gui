@@ -93,7 +93,7 @@ if __name__ == '__main__':
     # print
     f = open('test.dat', 'w')
     f.write('# points ' + str(grid.numPoints) + '\n')
-    f.write('# times ' + str(1) + '\n')
+    f.write('# times ' + str(time.nt) + '\n')
     f.write('# x y z t c1 c2 c3\n')
     for t in range(0, time.nt):
         for i in range(0, grid.numPoints):
