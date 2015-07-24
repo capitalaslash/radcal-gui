@@ -14,9 +14,11 @@ class Data:
         # first line is number of points
         words = f.readline().split()
         numPts = int(words[2])
+        print 'numPoints =', numPts
 
         # second line is number of timesteps
         numTimes = int(f.readline().split()[2])
+        print 'numTimes =', numTimes
 
         # third line used for var names
         titles = f.readline().split()
