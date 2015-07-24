@@ -43,30 +43,6 @@ class Data:
             for v in range(0, numVars):
                 varList[v].SetValue(i, float(words[4+v]))
 
-        # # build a fake unstructured grid
-        # self.grid = vtk.vtkUnstructuredGrid()
-        # self.grid.SetPoints(pts)
-        #
-        # self.grid.Allocate(numCells, numCells)
-        # for k in xrange(0, nz-1):
-        #     for j in xrange(0, ny-1):
-        #         for i in xrange(0, nx-1):
-        #             hexa = vtk.vtkHexahedron()
-        #             idx = i + nx*(j + ny*k)
-        #             hexa.GetPointIds().SetId(0, idx)
-        #             hexa.GetPointIds().SetId(1, idx+1)
-        #             hexa.GetPointIds().SetId(2, idx+1+nx)
-        #             hexa.GetPointIds().SetId(3, idx  +nx)
-        #             hexa.GetPointIds().SetId(4, idx     +nx*ny)
-        #             hexa.GetPointIds().SetId(5, idx+1   +nx*ny)
-        #             hexa.GetPointIds().SetId(6, idx+1+nx+nx*ny)
-        #             hexa.GetPointIds().SetId(7, idx+ +nx+nx*ny)
-        #             self.grid.InsertNextCell(hexa.GetCellType(),
-        #                 hexa.GetPointIds())
-        # for v in range(0, numVars):
-        #     self.grid.GetPointData().AddArray(varList[v])
-        # self.grid.GetPointData().SetActiveScalars(varList[0].GetName())
-
         # delaunay
         profile = vtk.vtkPolyData()
         profile.SetPoints(pts)
