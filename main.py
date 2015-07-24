@@ -104,6 +104,7 @@ class App(tk.Frame):
         self.frameButton = tk.Frame(self, bd=1, relief='sunken')
         self.frameButton.pack(fill='x', expand=0)
         tk.Button(self.frameButton, text='Quit', command=self.parent.quit, padx=5, pady=5).pack(side='right')
+        tk.Button(self.frameButton, text='Print', command=self.write, padx=5, pady=5).pack(side='right')
 
         self.clear()
         self.initKShortcuts()
@@ -240,6 +241,16 @@ class App(tk.Frame):
         for c in coordBounds:
             text = '[' + str(coordBounds[c][0]) + ', ' + str(coordBounds[c][1]) + ']'
             self.coordLabels[c].set(text)
+
+    def write(self):
+        fileName = tkFileDialog.asksaveasfilename(
+            defaultextension='.vtu',
+            filetypes=[('vtu files', '.vtu'), ('all files', '.*')],
+            initialdir=os.getcwd(),
+            initialfile='grid.vtu',
+            parent=self.frameButton,
+        )
+        self.data.write()
 
 if __name__ == '__main__':
     # data = data.Data(config.config)
