@@ -72,7 +72,6 @@ class VtkGui(object):
         self.markerWidget.SetInteractor(self.iren)
         self.markerWidget.SetOrientationMarker(axes)
         self.markerWidget.SetViewport(0.0, 0.0, 0.25, 0.25)
-        self.markerWidget.EnabledOn()
 
         # scalar bar
         self.scalarBarActor = vtk.vtkScalarBarActor()
@@ -95,7 +94,6 @@ class VtkGui(object):
         self.sliderWidget.SetAnimationModeToAnimate()
         self.sliderWidget.AddObserver(vtk.vtkCommand.InteractionEvent,
             self.updateContour);
-        # self.sliderWidget.EnabledOn()
 
     def clear(self):
         """
@@ -111,8 +109,10 @@ class VtkGui(object):
         print 'rendering timestep', self.currentTimeStep
         self.ren.RemoveActor(self.outlineActor)
         self.sliderWidget.EnabledOff()
+        self.markerWidget.EnabledOn()
         self.mapper3d.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
         self.ren.AddActor(self.mainActor)
+        self.ren.ResetCamera()
         self.renWin.Render()
 
     def renderContour(self):
