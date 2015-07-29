@@ -5,9 +5,10 @@ import vtk
 
 class Data:
     def __init__(self, **config):
-        print 'data configuration:', config
+        # print 'data configuration:', config
         self.config = config
         self.grid = []
+        self.numTimes = 0
         self.times = []
 
     def read(self):
@@ -71,7 +72,6 @@ class Data:
         varNames = []
         for i in range(0, numVars):
             varNames.append(pointData.GetArray(i).GetName())
-        print varNames
         return varNames
 
     def write(self, fileName):
