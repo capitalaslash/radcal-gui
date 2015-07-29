@@ -52,7 +52,9 @@ class App(tk.Frame):
         tk.Radiobutton(frameDim, text='3D', variable=self.varDim, value=3,
             command=self.dimModified).pack(side='right', fill='x', expand=1)
 
-        tk.Button(frameControl, text='Render', command=self.render).pack(fill='x', expand=0)
+        self.buttonRender = tk.Button(frameControl, text='Render',
+            command=self.render, state='disabled')
+        self.buttonRender.pack(fill='x', expand=0)
 
         self.buttonClear = tk.Button(frameControl, text='Clear',
             command=self.clear)
@@ -123,6 +125,7 @@ class App(tk.Frame):
         self.data = data.Data(**self.config)
         self.data.read()
         self.loadData(self.data)
+        self.buttonRender['state'] = 'normal'
 
     def dimModified(self):
         print 'dim =', self.varDim.get()
