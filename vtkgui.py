@@ -275,10 +275,10 @@ class VtkGui(object):
             self.render()
 
     def play(self):
-        for t in xrange(0, self.data.numTimes):
+        for t in xrange(self.currentTimeStep+1, self.data.numTimes):
+            time.sleep(0.5)
             self.currentTimeStep = t
             self.render()
-            time.sleep(1)
 
     def loadData(self, config):
         self.data.config = config
