@@ -9,6 +9,7 @@ import Tkinter as tk
 import tkFileDialog
 # import ttk
 
+import time
 import config
 import data
 import vtkgui
@@ -83,9 +84,9 @@ class App(tk.Frame):
             '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
         self.varCoord = tk.StringVar()
-        self.varCoord.set('t')
+        # self.varCoord.set('x')
 
-        coordTab = [ 'x', 'y', 'z', 't' ]
+        coordTab = [ 'x', 'y', 'z' ]
 
         counter=0
         self.coordEntries = {}
@@ -107,6 +108,41 @@ class App(tk.Frame):
         self.frameButton.pack(fill='x', expand=0)
         tk.Button(self.frameButton, text='Quit', command=self.parent.quit, padx=5, pady=5).pack(side='right')
         tk.Button(self.frameButton, text='Print', command=self.write, padx=5, pady=5).pack(side='right')
+        frameTime = tk.Frame(self.frameButton)
+        frameTime.pack(side='left')
+
+        buttonCfg = {
+            'side': 'left'
+        }
+        self.buttonFirst = tk.Button(frameTime, text='|<',
+            command=lambda: self.setTimeStep(0), width=3)
+        self.buttonFirst.pack(**buttonCfg)
+        self.buttonPrev = tk.Button(frameTime, text='<',
+            command=lambda: self.setTimeStep(self.varCurTimeStep.get()-1), width=3)
+        self.buttonPrev.pack(**buttonCfg)
+        self.buttonPlay = tk.Button(frameTime, text='|>',
+            command=self.play, width=3)
+        self.buttonPlay.pack(**buttonCfg)
+        self.buttonNext = tk.Button(frameTime, text='>',
+            command=lambda: self.setTimeStep(self.varCurTimeStep.get()+1), width=3)
+        self.buttonNext.pack(**buttonCfg)
+        self.buttonLast = tk.Button(frameTime, text='>|',
+            command=lambda: self.setTimeStep(self.vtk.data.numTimes-1), width=3)
+        self.buttonLast.pack(**buttonCfg)
+        tk.Label(frameTime, text='time:').pack(side='left', padx=10)
+        self.varCurTime = tk.DoubleVar()
+        self.varCurTime.set(0.0)
+        tk.Label(frameTime, textvariable=self.varCurTime, relief='sunken', width=10).pack(side='left')
+        tk.Label(frameTime, text='timestep:').pack(side='left', padx=10)
+        self.varCurTimeStep = tk.IntVar()
+        self.varCurTimeStep.set('0')
+        validateInt = (self.parent.register(self.validateInt),
+            '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+        tk.Entry(frameTime, text=self.varCurTimeStep, validate='key', validatecommand=validateInt, relief='sunken', width=10, justify='right').pack(side='left')
+        self.labelTimeStep = tk.StringVar()
+        tk.Label(frameTime, textvariable=self.labelTimeStep).pack(side='left')
+        self.buttonGo = tk.Button(frameTime, text='go', command=self.timeStepModified)
+        self.buttonGo.pack(side='left')
 
         self.clear()
         self.initKShortcuts()
@@ -137,7 +173,7 @@ class App(tk.Frame):
                 widget['state'] = 'disabled'
 
     def scalarBarModified(self):
-        self.vtk.scalarWidget.SetEnabled(self.varScalarBar.get())
+        self.vtk.scalarBarWidget.SetEnabled(self.varScalarBar.get())
         self.vtk.renWin.Render()
 
     def contourModified(self):
@@ -151,7 +187,9 @@ class App(tk.Frame):
         idx = self.varList.curselection()[0]
         var = self.varList.get(idx)
         print 'setting ', var
-        self.vtk.data.grid.GetInput().GetPointData().SetActiveScalars(var)
+        self.vtk.changeActiveScalar(var)
+        self.vtk.updateScalarBar()
+        self.vtk.updateContourRange()
         self.vtk.renWin.Render()
 
     def coordModified(self, *args):
@@ -165,27 +203,40 @@ class App(tk.Frame):
             else:
                 entry['state'] = 'normal'
 
+    def timeStepModified(self):
+        step = self.varCurTimeStep.get()
+        self.vtk.goToTimeStep(step)
+        self.varCurTime.set(self.vtk.data.times[step])
+
+    def setTimeStep(self, step):
+        if step > -1 and step < self.vtk.data.numTimes:
+            self.varCurTimeStep.set(step)
+            self.timeStepModified()
+
+    def play(self):
+        for t in range(self.varCurTimeStep.get()+1, self.vtk.data.numTimes):
+            time.sleep(0.5)
+            self.setTimeStep(t)
+
     def render(self):
         if(self.varDim.get() == 3):
+            self.vtk.updateScalarBar()
             self.vtk.render()
             self.checkScalarBar['state']='normal'
             self.checkContour['state']='normal'
         elif(self.varDim.get() == 2):
-            if self.varCoord.get() == 't':
-                print 'plot over time not implemented yet!'
-            else:
-                self.vtk.plot(self.buildLine())
+            self.vtk.plot(self.buildLine())
         self.buttonClear['state']='normal'
 
     def buildLine(self):
-        bounds = self.data.grid.GetInput().GetBounds()
+        bounds = self.data.grid[0].GetInput().GetBounds()
         line = [
             [bounds[0], bounds[2], bounds[4]],
             [bounds[1], bounds[3], bounds[5]],
         ]
-        coordToInt = { 'x': 0, 'y': 1, 'z': 2, 't': 3}
+        coordToInt = { 'x': 0, 'y': 1, 'z': 2}
         for key, entry in self.coordEntries.iteritems():
-            if key != self.varCoord.get() and key != 't':
+            if key != self.varCoord.get():
                 value = float(entry.get())
                 line[0][coordToInt[key]] = value
                 line[1][coordToInt[key]] = value
@@ -204,7 +255,6 @@ class App(tk.Frame):
         for key, widget in self.coordEntries.iteritems():
             widget['state'] = 'disabled'
 
-
     def validateFloat(self, action, index, value_if_allowed,
             prior_value, text, validation_type, trigger_type, widget_name):
         # action=1 -> insert
@@ -221,27 +271,42 @@ class App(tk.Frame):
         else:
             return True
 
+    def validateInt(self, action, index, value_if_allowed,
+            prior_value, text, validation_type, trigger_type, widget_name):
+        # action=1 -> insert
+        if(action=='1'):
+            for char in text:
+                if char in '0123456789':
+                    try:
+                        int(value_if_allowed)
+                        return True
+                    except ValueError:
+                        return False
+                else:
+                    return False
+        else:
+            return True
+
     def initKShortcuts(self):
         self.bind_all("<Control-q>", lambda e: self.parent.quit() )
         self.bind_all("q", lambda e: self.parent.quit() )
 
-    def loadData(self, data):
-        self.vtk.loadData(data)
-        self.data = data
+    def loadData(self, config):
+        self.vtk.loadData(config)
         self.varList.delete(0, 'end')
         varNames = self.vtk.data.getVarList()
         for var in varNames:
             self.varList.insert('end', var)
-        bounds = self.data.grid.GetInput().GetBounds()
+        bounds = self.vtk.data.grid[0].GetInput().GetBounds()
         coordBounds = {}
         coordBounds['x'] = [bounds[0], bounds[1]]
         coordBounds['y'] = [bounds[2], bounds[3]]
         coordBounds['z'] = [bounds[4], bounds[5]]
-        coordBounds['t'] = [0., 1.]
 
         for c in coordBounds:
             text = '[' + str(coordBounds[c][0]) + ', ' + str(coordBounds[c][1]) + ']'
             self.coordLabels[c].set(text)
+        self.labelTimeStep.set('[0, ' + str(self.vtk.data.numTimes-1) + ']')
 
     def write(self):
         fileName = tkFileDialog.asksaveasfilename(
