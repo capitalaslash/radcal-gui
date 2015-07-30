@@ -274,6 +274,14 @@ class VtkGui(object):
             self.currentTimeStep -= 1
             self.render()
 
+    def first(self):
+        self.currentTimeStep = 0
+        self.render()
+
+    def last(self):
+        self.currentTimeStep = self.data.numTimes-1
+        self.render()
+
     def play(self):
         for t in xrange(self.currentTimeStep+1, self.data.numTimes):
             time.sleep(0.5)
