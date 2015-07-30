@@ -264,6 +264,10 @@ class VtkGui(object):
         self.sliderRep.SetMinimumValue(scalarRange[0])
         self.sliderRep.SetMaximumValue(scalarRange[1])
 
+    def goToTimeStep(self, step):
+        self.currentTimeStep = step
+        self.render()
+
     def next(self):
         if not self.currentTimeStep == self.data.numTimes-1:
             self.currentTimeStep += 1
