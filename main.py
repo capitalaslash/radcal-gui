@@ -122,9 +122,7 @@ class App(tk.Frame):
             )
         self.varFileName.set(fileName)
         self.config[u'fileName'] = fileName
-        self.data = data.Data(**self.config)
-        self.data.read()
-        self.loadData(self.data)
+        self.loadData(self.config)
         self.buttonRender['state'] = 'normal'
 
     def dimModified(self):

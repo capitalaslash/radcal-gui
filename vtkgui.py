@@ -2,6 +2,7 @@
 
 import vtk
 import time
+import data
 
 class VtkGui(object):
     """
@@ -16,7 +17,7 @@ class VtkGui(object):
         self.iren = iren
 
         # empty defaults
-        self.data = None
+        self.data = data.Data()
         self.currentTimeStep = 0
 
         # camera
@@ -110,7 +111,8 @@ class VtkGui(object):
         self.ren.RemoveActor(self.outlineActor)
         self.sliderWidget.EnabledOff()
         self.markerWidget.EnabledOn()
-        self.mapper3d.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
+        if self.data.numTimes > 0:
+            self.mapper3d.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
         self.ren.AddActor(self.mainActor)
         self.ren.ResetCamera()
         self.renWin.Render()
@@ -278,16 +280,15 @@ class VtkGui(object):
             self.render()
             time.sleep(1)
 
-    def loadData(self, data):
-        self.data = data
+    def loadData(self, config):
+        self.data.config = config
+        self.data.read()
         self.data.grid[self.currentTimeStep].GetInput().GetPointData().AddObserver(
             vtk.vtkCommand.ModifiedEvent, self.pointDataModified)
 
 if __name__ == '__main__':
     import config
     import data
-    data = data.Data(**config.config)
-    data.read()
 
     renWin = vtk.vtkRenderWindow()
     renWin.SetSize(config.config['vtkWidth'], config.config['vtkHeight'])
@@ -295,7 +296,7 @@ if __name__ == '__main__':
     iren.SetRenderWindow(renWin)
 
     app = VtkGui(iren)
-    app.loadData(data)
+    app.loadData(config.config)
 
     iren.Initialize()
     renWin.Render()
