@@ -238,9 +238,9 @@ class VtkGui(object):
             self.renWin.Render()
         elif char == 'p':
             self.play()
-        elif char == 'j':
-            self.next()
         elif char == 'k':
+            self.next()
+        elif char == 'j':
             self.prev()
         elif char == 'x':
             self.clear()
