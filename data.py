@@ -61,7 +61,10 @@ class Data:
             profile.GetPointData().SetActiveScalars(varList[0].GetName())
 
             self.grid.append(vtk.vtkDelaunay3D())
-            self.grid[t].SetInputData(profile)
+            if vtk.VTK_MAJOR_VERSION <= 5:
+                self.grid[t].SetInput(profile)
+            else:
+                self.grid[t].SetInputData(profile)
             self.grid[t].SetTolerance(0.01)
             self.grid[t].SetAlpha(0.0)
             self.grid[t].BoundingTriangulationOff()
