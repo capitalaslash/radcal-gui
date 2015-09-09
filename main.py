@@ -104,6 +104,12 @@ class App(tk.Frame):
             tk.Label(self.frameProbe, textvariable=self.coordLabels[c]).grid(row=counter, column=2)
             counter += 1
 
+        self.varTimePlot = tk.IntVar()
+        self.checkTimePlot = tk.Checkbutton(self.frameProbe, text='time plot',
+            variable=self.varTimePlot, command=self.timePlotModified,
+            state='disabled')
+        self.checkTimePlot.grid(row=3, column=0, columnspan=2)
+
         # bottom section
         self.frameButton = tk.Frame(self, bd=1, relief='sunken')
         self.frameButton.pack(fill='x', expand=0)
@@ -130,19 +136,27 @@ class App(tk.Frame):
         self.buttonLast = tk.Button(frameTime, text='>|',
             command=lambda: self.setTimeStep(self.vtk.data.numTimes-1), width=3)
         self.buttonLast.pack(**buttonCfg)
+
         tk.Label(frameTime, text='time:').pack(side='left', padx=10)
         self.varCurTime = tk.DoubleVar()
         self.varCurTime.set(0.0)
         tk.Label(frameTime, textvariable=self.varCurTime, relief='sunken', width=10).pack(side='left')
+
         tk.Label(frameTime, text='timestep:').pack(side='left', padx=10)
         self.varCurTimeStep = tk.IntVar()
         self.varCurTimeStep.set('0')
         validateInt = (self.parent.register(self.validateInt),
             '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        tk.Entry(frameTime, text=self.varCurTimeStep, validate='key', validatecommand=validateInt, relief='sunken', width=10, justify='right').pack(side='left')
-        self.labelTimeStep = tk.StringVar()
-        tk.Label(frameTime, textvariable=self.labelTimeStep).pack(side='left')
-        self.buttonGo = tk.Button(frameTime, text='go', command=self.timeStepModified)
+        self.entryTimeStep = tk.Entry(frameTime, text=self.varCurTimeStep,
+            validate='key', validatecommand=validateInt, relief='sunken',
+            width=10, justify='right')
+        self.entryTimeStep.pack(side='left')
+        self.stringTimeStep = tk.StringVar()
+        self.labelTimeStep = tk.Label(frameTime,
+            textvariable=self.stringTimeStep)
+        self.labelTimeStep.pack(side='left')
+        self.buttonGo = tk.Button(frameTime, text='go',
+            command=self.timeStepModified)
         self.buttonGo.pack(side='left')
 
         self.clear()
@@ -164,21 +178,31 @@ class App(tk.Frame):
 
     def dimModified(self):
         dim = self.varDim.get()
-        print 'dim ='
         self.vtk.dim = dim
         self.vtk.markerWidget.EnabledOff()
         self.clear()
         if dim == 2:
             self.coordModified(None)
-            for key, widget in self.coordRadios.iteritems():
-                widget['state'] = 'normal'
-            for key, widget in self.coordEntries.iteritems():
-                widget['state'] = 'normal'
+            self.setProbePanelState('normal')
+            self.checkTimePlot['state'] = 'normal'
         elif self.varDim.get() == 3:
-            for key, widget in self.coordRadios.iteritems():
-                widget['state'] = 'disabled'
-            for key, widget in self.coordEntries.iteritems():
-                widget['state'] = 'disabled'
+            self.setProbePanelState('disabled')
+            self.checkTimePlot['state'] = 'disabled'
+
+    def setProbePanelState(self, state):
+        for key, widget in self.coordRadios.iteritems():
+            widget['state'] = state
+        for key, widget in self.coordEntries.iteritems():
+            widget['state'] = state
+
+    def setTimeFrameState(self, state):
+        self.buttonFirst['state'] = state
+        self.buttonPrev['state'] = state
+        self.buttonPlay['state'] = state
+        self.buttonNext['state'] = state
+        self.buttonLast['state'] = state
+        self.entryTimeStep['state'] = state
+        self.buttonGo['state'] = state
 
     def scalarBarModified(self):
         self.vtk.scalarBarWidget.SetEnabled(self.varScalarBar.get())
@@ -208,6 +232,17 @@ class App(tk.Frame):
                 entry['state'] = 'disabled'
             else:
                 entry['state'] = 'normal'
+
+    def timePlotModified(self, *args):
+        if self.varTimePlot.get():
+            for key, radio in self.coordRadios.iteritems():
+                radio['state'] = 'disabled'
+            for key, entry in self.coordEntries.iteritems():
+                entry['state'] = 'normal'
+            self.setTimeFrameState('disabled')
+        else:
+            self.coordModified()
+            self.setTimeFrameState('normal')
 
     def timeStepModified(self):
         step = self.varCurTimeStep.get()
@@ -257,10 +292,7 @@ class App(tk.Frame):
         self.checkScalarBar['state']='disabled'
         self.varContour.set(0)
         self.checkContour['state']='disabled'
-        for key, widget in self.coordRadios.iteritems():
-            widget['state'] = 'disabled'
-        for key, widget in self.coordEntries.iteritems():
-            widget['state'] = 'disabled'
+        self.setProbePanelState('disabled')
 
     def validateFloat(self, action, index, value_if_allowed,
             prior_value, text, validation_type, trigger_type, widget_name):
@@ -313,7 +345,7 @@ class App(tk.Frame):
         for c in coordBounds:
             text = '[' + str(coordBounds[c][0]) + ', ' + str(coordBounds[c][1]) + ']'
             self.coordLabels[c].set(text)
-        self.labelTimeStep.set('[0, ' + str(self.vtk.data.numTimes-1) + ']')
+        self.stringTimeStep.set('[0, ' + str(self.vtk.data.numTimes-1) + ']')
 
     def write(self):
         fileName = tkFileDialog.asksaveasfilename(
