@@ -13,12 +13,17 @@ class VtkGui(object):
         """
         initialization of the interactor and fixed objects
         """
+        # state indicators
+        self.dim = 3
+        self.contourState = False
+
         # interactor
         self.iren = iren
 
         # empty defaults
         self.data = data.Data()
         self.currentTimeStep = 0
+        self.linePoints = [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]
 
         # camera
         self.camera = vtk.vtkCamera()
@@ -105,12 +110,25 @@ class VtkGui(object):
 
     def render(self):
         """
-        surface visualization of data
+        select the current mode of visualization on trigger proper function
         """
         print 'rendering timestep', self.currentTimeStep
+
+        if self.dim == 3:
+            self.markerWidget.EnabledOn()
+            self.sliderWidget.SetEnabled(int(self.contourState))
+            if self.contourState:
+                self.renderContour()
+            else:
+                self.render3D()
+        else:
+            self.plot()
+
+    def render3D(self):
+        """
+        surface visualization of data
+        """
         self.ren.RemoveActor(self.outlineActor)
-        self.sliderWidget.EnabledOff()
-        self.markerWidget.EnabledOn()
         if self.data.numTimes > 0:
             self.mapper3d.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
         self.ren.AddActor(self.mainActor)
@@ -121,7 +139,6 @@ class VtkGui(object):
         """
         contour visualization of data
         """
-        self.ren.RemoveAllViewProps()
         activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
 
         self.contour.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
@@ -149,7 +166,10 @@ class VtkGui(object):
         self.outlineActor.SetMapper(outlineMapper)
         self.ren.AddActor(self.outlineActor)
 
-    def plot(self, linePoints):
+    def setLine(self, linePoints):
+        self.linePoints = linePoints
+
+    def plot(self):
         """
         plot visualization of data
         """
@@ -160,8 +180,8 @@ class VtkGui(object):
 
         line = vtk.vtkLineSource()
         line.SetResolution(30)
-        line.SetPoint1(linePoints[0])
-        line.SetPoint2(linePoints[1])
+        line.SetPoint1(self.linePoints[0])
+        line.SetPoint2(self.linePoints[1])
         probe = vtk.vtkProbeFilter()
         probe.SetInputConnection(line.GetOutputPort())
         probe.SetSourceConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
@@ -176,7 +196,10 @@ class VtkGui(object):
         # self.ren.AddActor(lineActor)
 
         xyplot = vtk.vtkXYPlotActor()
-        xyplot.AddDataSetInputConnection(probe.GetOutputPort())
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            xyplot.AddInput(probe.GetOutput())
+        else:
+            xyplot.AddDataSetInputConnection(probe.GetOutputPort())
         xyplot.GetPositionCoordinate().SetValue(0.05, 0.05, 0.0)
         xyplot.GetPosition2Coordinate().SetValue(0.9, 0.9, 0.0) #relative to Position
         xyplot.SetXValuesToArcLength()
