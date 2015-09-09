@@ -19,6 +19,7 @@ class App(tk.Frame):
         self.config = config
         tk.Frame.__init__(self, parent)
         self.parent = parent
+        parent.wm_title('radcal-gui')
         self.pack(fill='both', expand=1)
 
         # top section
