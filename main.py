@@ -163,10 +163,17 @@ class App(tk.Frame):
         self.buttonRender['state'] = 'normal'
 
     def dimModified(self):
-        print 'dim =', self.varDim.get()
+        dim = self.varDim.get()
+        print 'dim ='
+        self.vtk.dim = dim
+        self.vtk.markerWidget.EnabledOff()
         self.clear()
-        if self.varDim.get() == 2:
+        if dim == 2:
             self.coordModified(None)
+            for key, widget in self.coordRadios.iteritems():
+                widget['state'] = 'normal'
+            for key, widget in self.coordEntries.iteritems():
+                widget['state'] = 'normal'
         elif self.varDim.get() == 3:
             for key, widget in self.coordRadios.iteritems():
                 widget['state'] = 'disabled'
@@ -179,10 +186,8 @@ class App(tk.Frame):
 
     def contourModified(self):
         self.vtk.clear()
-        if self.varContour.get():
-            self.vtk.renderContour()
-        else:
-            self.vtk.render()
+        self.vtk.contourState = bool(self.varContour.get())
+        self.vtk.render()
 
     def varModified(self, *args):
         idx = self.varList.curselection()[0]
@@ -226,11 +231,12 @@ class App(tk.Frame):
             self.checkScalarBar['state']='normal'
             self.checkContour['state']='normal'
         elif(self.varDim.get() == 2):
-            self.vtk.plot(self.buildLine())
+            self.vtk.setLine(self.buildLine())
+            self.vtk.plot()
         self.buttonClear['state']='normal'
 
     def buildLine(self):
-        bounds = self.data.grid[0].GetInput().GetBounds()
+        bounds = self.vtk.data.grid[0].GetInput().GetBounds()
         line = [
             [bounds[0], bounds[2], bounds[4]],
             [bounds[1], bounds[3], bounds[5]],
