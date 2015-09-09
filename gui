@@ -1,6 +1,4 @@
 #! /bin/bash
 
-. vtk.env
-
 python2 ./main.py
 
