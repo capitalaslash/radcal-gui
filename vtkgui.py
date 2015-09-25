@@ -259,7 +259,7 @@ class VtkGui(object):
         elif char == 'a':
             self.updateScalarBar()
             self.renWin.Render()
-        elif char == 'p':
+        elif char == ' ':
             self.play()
         elif char == 'k':
             self.next()
@@ -267,6 +267,8 @@ class VtkGui(object):
             self.prev()
         elif char == 'x':
             self.clear()
+        elif char == 'p':
+            self.screenshot('screenshot.png')
 
     def changeActiveScalar(self, name):
         for t in xrange(0, self.data.numTimes):
@@ -320,6 +322,16 @@ class VtkGui(object):
         self.data.read()
         self.data.grid[self.currentTimeStep].GetInput().GetPointData().AddObserver(
             vtk.vtkCommand.ModifiedEvent, self.pointDataModified)
+
+    def screenshot(self, filename):
+        w2if = vtk.vtkWindowToImageFilter()
+        w2if.SetInput(self.renWin)
+        w2if.Update()
+
+        writer = vtk.vtkPNGWriter()
+        writer.SetFileName(filename)
+        writer.SetInput(w2if.GetOutput())
+        writer.Write()
 
 if __name__ == '__main__':
     import config
