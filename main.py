@@ -114,7 +114,8 @@ class App(tk.Frame):
         self.frameButton = tk.Frame(self, bd=1, relief='sunken')
         self.frameButton.pack(fill='x', expand=0)
         tk.Button(self.frameButton, text='Quit', command=self.parent.quit, padx=5, pady=5).pack(side='right')
-        tk.Button(self.frameButton, text='Print', command=self.write, padx=5, pady=5).pack(side='right')
+        tk.Button(self.frameButton, text='Save', command=self.write, padx=5, pady=5).pack(side='right')
+        tk.Button(self.frameButton, text='Print', command=self.screenshot, padx=5, pady=5).pack(side='right')
         frameTime = tk.Frame(self.frameButton)
         frameTime.pack(side='left')
 
@@ -357,6 +358,17 @@ class App(tk.Frame):
         )
         if fileName is not None:
             self.data.write(fileName)
+
+    def screenshot(self):
+        fileName = tkFileDialog.asksaveasfilename(
+            defaultextension='.png',
+            filetypes=[('PNG image', '.png'), ('all files', '.*')],
+            initialdir=os.getcwd(),
+            initialfile='screenshot.png',
+            parent=self.frameButton,
+        )
+        if fileName is not None:
+            self.vtk.screenshot(fileName)
 
 if __name__ == '__main__':
     # data = data.Data(config.config)
