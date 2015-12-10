@@ -3,7 +3,7 @@
 import math
 import vtk
 
-class Data:
+class Data(object):
     def __init__(self, **config):
         # print 'data configuration:', config
         self.config = config
