@@ -91,12 +91,11 @@ if __name__ == '__main__':
     f3 = Function(fun3, grid, time)
 
     # print
-    f = open('test.dat', 'w')
-    f.write('# points ' + str(grid.numPoints) + '\n')
-    f.write('# times ' + str(time.nt) + '\n')
-    f.write('# x y z t c1 c2 c3\n')
-    for t in range(0, time.nt):
-        for i in range(0, grid.numPoints):
-            p = grid.points[i]
-            f.write('{:e} {:e} {:e} {:e} {:e} {:e} {:e}\n'.format(p.x, p.y, p.z, time.times[t], f1.values[t][i], f2.values[t][i], f3.values[t][i]))
-    f.close()
+    with open('test.dat', 'w') as f:
+        f.write('# points ' + str(grid.numPoints) + '\n')
+        f.write('# times ' + str(time.nt) + '\n')
+        f.write('# x y z t c1 c2 c3\n')
+        for t in range(0, time.nt):
+            for i in range(0, grid.numPoints):
+                p = grid.points[i]
+                f.write('{:e} {:e} {:e} {:e} {:e} {:e} {:e}\n'.format(p.x, p.y, p.z, time.times[t], f1.values[t][i], f2.values[t][i], f3.values[t][i]))
