@@ -90,7 +90,7 @@ class Data:
             writer.Write()
 
 if __name__ == '__main__':
-    from config import *
+    from config import Data
 
     data = Data(fileName='test.dat')
 
