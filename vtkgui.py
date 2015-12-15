@@ -260,11 +260,11 @@ class VtkGui(object):
             self.update_scalarbar()
             self.ren_win.Render()
         elif char == ' ':
-            self.play()
+            self.time_play()
         elif char == 'k':
-            self.next()
+            self.time_next()
         elif char == 'j':
-            self.prev()
+            self.time_prev()
         elif char == 'x':
             self.clear()
         elif char == 'p':
@@ -293,25 +293,25 @@ class VtkGui(object):
         self.current_timestep = step
         self.render()
 
-    def next(self):
+    def time_next(self):
         if not self.current_timestep == self.data.num_times-1:
             self.current_timestep += 1
             self.render()
 
-    def prev(self):
+    def time_prev(self):
         if not self.current_timestep == 0:
             self.current_timestep -= 1
             self.render()
 
-    def first(self):
+    def time_first(self):
         self.current_timestep = 0
         self.render()
 
-    def last(self):
+    def time_last(self):
         self.current_timestep = self.data.num_times-1
         self.render()
 
-    def play(self):
+    def time_play(self):
         for t in xrange(self.current_timestep+1, self.data.num_times):
             time.sleep(0.5)
             self.current_timestep = t
