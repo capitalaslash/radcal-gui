@@ -14,6 +14,38 @@ import config
 import data
 import vtkgui
 
+def validate_float(action, index, value_if_allowed,
+        prior_value, text, validation_type, trigger_type, widget_name):
+    # action=1 -> insert
+    if action=='1':
+        for char in text:
+            if char in '0123456789.-+':
+                try:
+                    float(value_if_allowed)
+                    return True
+                except ValueError:
+                    return False
+            else:
+                return False
+    else:
+        return True
+
+def validate_int(action, index, value_if_allowed,
+        prior_value, text, validation_type, trigger_type, widget_name):
+    # action=1 -> insert
+    if action=='1':
+        for char in text:
+            if char in '0123456789':
+                try:
+                    int(value_if_allowed)
+                    return True
+                except ValueError:
+                    return False
+            else:
+                return False
+    else:
+        return True
+
 class App(tk.Frame):
     """The visualization app."""
     def __init__(self, parent, config):
@@ -82,7 +114,7 @@ class App(tk.Frame):
         self.frame_probe = tk.Frame(frame_control)
         self.frame_probe.pack(fill='x',expand=1)
 
-        validate_float = (self.parent.register(self.validate_float),
+        command_val_float = (self.parent.register(validate_float),
             '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
 
         self.var_coord = tk.StringVar()
@@ -99,7 +131,7 @@ class App(tk.Frame):
                 variable=self.var_coord, value=c, command=self.coord_modified)
             self.radio_coord[c].grid(row=counter, column=0)
             self.entry_coord[c] = tk.Entry(self.frame_probe,
-                validate='key', validatecommand=validate_float)
+                validate='key', validatecommand=command_val_float)
             self.entry_coord[c].grid(row=counter, column=1)
             self.label_coord[c] = tk.StringVar()
             tk.Label(self.frame_probe, textvariable=self.label_coord[c]).grid(row=counter, column=2)
@@ -147,10 +179,10 @@ class App(tk.Frame):
         tk.Label(frame_time, text='timestep:').pack(side='left', padx=10)
         self.var_curtimestep = tk.IntVar()
         self.var_curtimestep.set('0')
-        validate_int = (self.parent.register(self.validate_int),
+        command_val_int = (self.parent.register(validate_int),
             '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         self.entry_timestep = tk.Entry(frame_time, text=self.var_curtimestep,
-            validate='key', validatecommand=validate_int, relief='sunken',
+            validate='key', validatecommand=command_val_int, relief='sunken',
             width=10, justify='right')
         self.entry_timestep.pack(side='left')
         self.string_timestep = tk.StringVar()
@@ -295,38 +327,6 @@ class App(tk.Frame):
         self.var_contour.set(0)
         self.check_contour['state']='disabled'
         self.set_probe_panel_state('disabled')
-
-    def validate_float(self, action, index, value_if_allowed,
-            prior_value, text, validation_type, trigger_type, widget_name):
-        # action=1 -> insert
-        if(action=='1'):
-            for char in text:
-                if char in '0123456789.-+':
-                    try:
-                        float(value_if_allowed)
-                        return True
-                    except ValueError:
-                        return False
-                else:
-                    return False
-        else:
-            return True
-
-    def validate_int(self, action, index, value_if_allowed,
-            prior_value, text, validation_type, trigger_type, widget_name):
-        # action=1 -> insert
-        if(action=='1'):
-            for char in text:
-                if char in '0123456789':
-                    try:
-                        int(value_if_allowed)
-                        return True
-                    except ValueError:
-                        return False
-                else:
-                    return False
-        else:
-            return True
 
     def init_kshortcuts(self):
         self.bind_all("<Control-q>", lambda e: self.parent.quit() )
