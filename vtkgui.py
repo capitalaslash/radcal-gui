@@ -143,7 +143,7 @@ class VtkGui(object):
 
         self.contour.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
 
-        scalarRange = active_scalar.GetRange()
+        scalar_range = active_scalar.GetRange()
         mean = 0.5*(scalarRange[0]+scalarRange[1])
         self.contour.SetValue(0, mean)
 
@@ -161,9 +161,9 @@ class VtkGui(object):
     def add_outline(self):
         outline = vtk.vtkOutlineFilter()
         outline.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
-        outlineMapper = vtk.vtkDataSetMapper()
-        outlineMapper.SetInputConnection(outline.GetOutputPort())
-        self.outline_actor.SetMapper(outlineMapper)
+        outline_mapper = vtk.vtkDataSetMapper()
+        outline_mapper.SetInputConnection(outline.GetOutputPort())
+        self.outline_actor.SetMapper(outline_mapper)
         self.ren.AddActor(self.outline_actor)
 
     def set_line(self, linePoints):
@@ -189,11 +189,11 @@ class VtkGui(object):
         tuber = vtk.vtkTubeFilter()
         tuber.SetInputConnection(probe.GetOutputPort())
         tuber.SetRadius(0.02)
-        lineMapper = vtk.vtkPolyDataMapper()
-        lineMapper.SetInputConnection(tuber.GetOutputPort())
-        lineActor = vtk.vtkActor()
-        lineActor.SetMapper(lineMapper)
-        # self.ren.AddActor(lineActor)
+        line_mapper = vtk.vtkPolyDataMapper()
+        line_mapper.SetInputConnection(tuber.GetOutputPort())
+        line_actor = vtk.vtkActor()
+        line_actor.SetMapper(line_mapper)
+        # self.ren.AddActor(line_actor)
 
         xyplot = vtk.vtkXYPlotActor()
         if vtk.VTK_MAJOR_VERSION <= 5:
@@ -285,7 +285,7 @@ class VtkGui(object):
 
     def update_contourrange(self):
         active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
-        scalarRange = active_scalar.GetRange()
+        scalar_range = active_scalar.GetRange()
         self.slider_rep.SetMinimumValue(scalarRange[0])
         self.slider_rep.SetMaximumValue(scalarRange[1])
 
