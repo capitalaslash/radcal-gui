@@ -67,11 +67,11 @@ class VtkGui(object):
         self.iren.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
 
         # keyboard bindings
-        self.iren.AddObserver(vtk.vtkCommand.KeyPressEvent, self.onKeyPress)
+        self.iren.AddObserver(vtk.vtkCommand.KeyPressEvent, self.on_keypress)
 
-        self.addWidgets()
+        self.add_widgets()
 
-    def addWidgets(self):
+    def add_widgets(self):
         # axes
         axes = vtk.vtkAxesActor()
         self.markerWidget = vtk.vtkOrientationMarkerWidget()
@@ -99,7 +99,7 @@ class VtkGui(object):
         self.sliderWidget.SetRepresentation(self.sliderRep)
         self.sliderWidget.SetAnimationModeToAnimate()
         self.sliderWidget.AddObserver(vtk.vtkCommand.InteractionEvent,
-            self.updateContour);
+            self.update_contour);
 
     def clear(self):
         """
@@ -118,13 +118,13 @@ class VtkGui(object):
             self.markerWidget.EnabledOn()
             self.sliderWidget.SetEnabled(int(self.contourState))
             if self.contourState:
-                self.renderContour()
+                self.render_contour()
             else:
-                self.render3D()
+                self.render_3d()
         else:
             self.plot()
 
-    def render3D(self):
+    def render_3d(self):
         """
         surface visualization of data
         """
@@ -135,7 +135,7 @@ class VtkGui(object):
         self.ren.ResetCamera()
         self.renWin.Render()
 
-    def renderContour(self):
+    def render_contour(self):
         """
         contour visualization of data
         """
@@ -151,14 +151,14 @@ class VtkGui(object):
         self.mapper3d.SetInputConnection(self.contour.GetOutputPort())
         self.ren.AddActor(self.mainActor)
 
-        self.addOutline()
+        self.add_outline()
 
-        self.updateContourRange()
+        self.update_contourrange()
         self.sliderRep.SetValue(mean)
         self.sliderWidget.EnabledOn()
         self.renWin.Render()
 
-    def addOutline(self):
+    def add_outline(self):
         outline = vtk.vtkOutlineFilter()
         outline.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
         outlineMapper = vtk.vtkDataSetMapper()
@@ -166,7 +166,7 @@ class VtkGui(object):
         self.outlineActor.SetMapper(outlineMapper)
         self.ren.AddActor(self.outlineActor)
 
-    def setLine(self, linePoints):
+    def set_line(self, linePoints):
         self.linePoints = linePoints
 
     def plot(self):
@@ -211,7 +211,7 @@ class VtkGui(object):
         # xyplot.SetXRange(.1, .35)
         # xyplot.SetYRange(.2, .4)
         # xyplot.GetProperty().SetColor(0, 0, 0)
-        xyplot.GetProperty().SetLineWidth(2)
+        xyplot.GetProperty().set_lineWidth(2)
         self.ren.AddActor2D(xyplot)
         # self.xyplotWidget = vtk.vtkXYPlotWidget()
         # self.xyplotWidget.SetXYPlotActor(xyplot)
@@ -220,11 +220,11 @@ class VtkGui(object):
 
         self.renWin.Render()
 
-    def updateContour(self, obj, ev):
+    def update_contour(self, obj, ev):
         value = self.sliderWidget.GetRepresentation().GetValue()
         self.contour.SetValue(0, value)
 
-    def pointDataModified(self, obj, ev):
+    def pointdata_modified(self, obj, ev):
         """
         callback: activated on modifications to pointData in grid
         """
@@ -236,28 +236,28 @@ class VtkGui(object):
         # scalarBarActor.SetLookupTable(self.lut)
         # self.scalarBarWidget.SetScalarBarActor(scalarBarActor)
 
-    def onKeyPress(self, obj, ev):
+    def on_keypress(self, obj, ev):
         """
         callback: activated when a key is pressed
         """
         char = obj.GetKeyCode()
         # print 'pressed: ', char
         if char == '1':
-            self.changeActiveScalar('c1')
+            self.change_activescalar('c1')
         elif char == '2':
-            self.changeActiveScalar('c2')
+            self.change_activescalar('c2')
         elif char == '3':
-            self.changeActiveScalar('c3')
+            self.change_activescalar('c3')
         elif char == 'r':
-            self.updateScalarBar()
+            self.update_scalarbar()
             self.render()
         elif char == 'c':
-            self.renderContour()
+            self.render_contour()
         elif char == 's':
             self.scalarBarWidget.SetEnabled(1-self.scalarBarWidget.GetEnabled())
             self.renWin.Render()
         elif char == 'a':
-            self.updateScalarBar()
+            self.update_scalarbar()
             self.renWin.Render()
         elif char == ' ':
             self.play()
@@ -270,26 +270,26 @@ class VtkGui(object):
         elif char == 'p':
             self.screenshot('screenshot.png')
 
-    def changeActiveScalar(self, name):
+    def change_activescalar(self, name):
         for t in xrange(0, self.data.numTimes):
             self.data.grid[t].GetInput().GetPointData().SetActiveScalars(name)
-        self.updateScalarBar()
-        self.updateContourRange()
+        self.update_scalarbar()
+        self.update_contourrange()
         self.renWin.Render()
 
-    def updateScalarBar(self):
+    def update_scalarbar(self):
         # resetRange = kwargs.get('resetRange', False)
         activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
         self.scalarBarActor.SetTitle(activeScalar.GetName())
         self.mapper3d.SetScalarRange(activeScalar.GetRange())
 
-    def updateContourRange(self):
+    def update_contourrange(self):
         activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
         scalarRange = activeScalar.GetRange()
         self.sliderRep.SetMinimumValue(scalarRange[0])
         self.sliderRep.SetMaximumValue(scalarRange[1])
 
-    def goToTimeStep(self, step):
+    def goto_timestep(self, step):
         self.currentTimeStep = step
         self.render()
 
@@ -317,11 +317,11 @@ class VtkGui(object):
             self.currentTimeStep = t
             self.render()
 
-    def loadData(self, config):
+    def load_data(self, config):
         self.data.config = config
         self.data.read()
         self.data.grid[self.currentTimeStep].GetInput().GetPointData().AddObserver(
-            vtk.vtkCommand.ModifiedEvent, self.pointDataModified)
+            vtk.vtkCommand.ModifiedEvent, self.pointdata_modified)
 
     def screenshot(self, filename):
         w2if = vtk.vtkWindowToImageFilter()
@@ -343,7 +343,7 @@ if __name__ == '__main__':
     iren.SetRenderWindow(renWin)
 
     app = VtkGui(iren)
-    app.loadData(config.config)
+    app.load_data(config.config)
 
     iren.Initialize()
     renWin.Render()

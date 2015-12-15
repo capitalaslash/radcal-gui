@@ -69,7 +69,7 @@ class Data(object):
             self.grid[t].SetAlpha(0.0)
             self.grid[t].BoundingTriangulationOff()
 
-    def getVarList(self):
+    def get_varlist(self):
         pointData = self.grid[0].GetInput().GetPointData()
         numVars = pointData.GetNumberOfComponents()
         varNames = []
