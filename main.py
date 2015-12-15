@@ -15,6 +15,7 @@ import data
 import vtkgui
 
 class App(tk.Frame):
+    """The visualization app."""
     def __init__(self, parent, config):
         self.config = config
         tk.Frame.__init__(self, parent)

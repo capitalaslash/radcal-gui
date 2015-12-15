@@ -4,6 +4,7 @@ import math
 # import vtk
 
 class Point(object):
+    """A class to store a 3D point."""
     def __init__(self):
         self.x = 0.0
         self.y = 0.0
@@ -27,6 +28,7 @@ class Point(object):
         return '(' + repr(self.x) + ', ' + repr(self.y) + ', ' + repr(self.z) +  ')'
 
 class Grid(object):
+    """A class to create and store a simple mesh."""
     def __init__(self, **opts):
         nx = opts['nx']
         ny = opts['ny']
@@ -46,6 +48,7 @@ class Grid(object):
         self.numPoints = counter
 
 class TimeRange(object):
+    """A list of time instants."""
     def __init__(self, **opts):
         ti = opts['ti']
         tf = opts['tf']
@@ -57,6 +60,7 @@ class TimeRange(object):
             self.times.append(ti + i*dt)
 
 class Function(object):
+    """The set of values of a function on a grid in a time interval."""
     def __init__(self, fun, grid, time):
         self.values = []
 

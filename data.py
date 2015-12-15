@@ -4,6 +4,7 @@ import math
 import vtk
 
 class Data(object):
+    """A class for reading and writing the mesh and its variables."""
     def __init__(self, **config):
         # print 'data configuration:', config
         self.config = config
