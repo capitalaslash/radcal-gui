@@ -330,7 +330,10 @@ class VtkGui(object):
 
         writer = vtk.vtkPNGWriter()
         writer.SetFileName(filename)
-        writer.SetInput(w2if.GetOutput())
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            writer.SetInput(w2if.GetOutput())
+        else:
+            writer.SetInputConnection(w2if.GetOutputPort())
         writer.Write()
 
 if __name__ == '__main__':
