@@ -252,7 +252,7 @@ class App(tk.Frame):
         self.var_curtime.set(self.vtk.data.times[step])
 
     def set_timestep(self, step):
-        if step > -1 and step < self.vtk.data.numTimes:
+        if 0 <= step < self.vtk.data.num_times:
             self.var_curtimestep.set(step)
             self.timestep_modified()
 
