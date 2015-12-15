@@ -10,9 +10,9 @@ config = {
     u'grid_origin': [0.0, 0.0, 0.0],
     u'grid_length': [5.0, 3.0, 1.0],
 
-    u'fileName': 'test.dat',
-    u'vtkWidth': 800,
-    u'vtkHeight': 800
+    u'filename': 'test.dat',
+    u'vtk_width': 800,
+    u'vtk_height': 800
 }
 
 if __name__ == '__main__':

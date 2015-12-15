@@ -15,15 +15,15 @@ class VtkGui(object):
         """
         # state indicators
         self.dim = 3
-        self.contourState = False
+        self.contour_state = False
 
         # interactor
         self.iren = iren
 
         # empty defaults
         self.data = data.Data()
-        self.currentTimeStep = 0
-        self.linePoints = [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]
+        self.current_timestep = 0
+        self.line_points = [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]]
 
         # camera
         self.camera = vtk.vtkCamera()
@@ -47,21 +47,21 @@ class VtkGui(object):
         self.contour.SetNumberOfContours(1)
 
         # actors
-        self.mainActor = vtk.vtkLODActor()
-        self.mainActor.SetMapper(self.mapper3d)
-        self.outlineActor = vtk.vtkActor()
+        self.main_actor = vtk.vtkLODActor()
+        self.main_actor.SetMapper(self.mapper3d)
+        self.outline_actor = vtk.vtkActor()
 
         # render window
-        self.renWin = self.iren.GetRenderWindow()
-        # self.renWin.SetSize(800, 800)
-        # self.renWin.SetNumberOfLayers(2)
+        self.ren_win = self.iren.GetRenderWindow()
+        # self.ren_win.SetSize(800, 800)
+        # self.ren_win.SetNumberOfLayers(2)
 
         # main renderer
         self.ren = vtk.vtkRenderer()
         # self.ren.SetLayer(0)
         self.ren.SetBackground(0.1, 0.2, 0.4)
         self.ren.SetActiveCamera(self.camera)
-        self.renWin.AddRenderer(self.ren)
+        self.ren_win.AddRenderer(self.ren)
 
         # set interaction style to paraview style
         self.iren.GetInteractorStyle().SetCurrentStyleToTrackballCamera()
@@ -74,31 +74,31 @@ class VtkGui(object):
     def add_widgets(self):
         # axes
         axes = vtk.vtkAxesActor()
-        self.markerWidget = vtk.vtkOrientationMarkerWidget()
-        self.markerWidget.SetInteractor(self.iren)
-        self.markerWidget.SetOrientationMarker(axes)
-        self.markerWidget.SetViewport(0.0, 0.0, 0.25, 0.25)
+        self.marker_widget = vtk.vtkOrientationMarkerWidget()
+        self.marker_widget.SetInteractor(self.iren)
+        self.marker_widget.SetOrientationMarker(axes)
+        self.marker_widget.SetViewport(0.0, 0.0, 0.25, 0.25)
 
         # scalar bar
-        self.scalarBarActor = vtk.vtkScalarBarActor()
-        self.scalarBarActor.SetLookupTable(self.lut)
-        self.scalarBarWidget = vtk.vtkScalarBarWidget()
-        self.scalarBarWidget.SetInteractor(self.iren)
-        self.scalarBarWidget.SetScalarBarActor(self.scalarBarActor)
+        self.scalarbar_actor = vtk.vtkScalarBarActor()
+        self.scalarbar_actor.SetLookupTable(self.lut)
+        self.scalarbar_widget = vtk.vtkScalarBarWidget()
+        self.scalarbar_widget.SetInteractor(self.iren)
+        self.scalarbar_widget.SetScalarBarActor(self.scalarbar_actor)
 
         # contour slider
-        self.sliderRep = vtk.vtkSliderRepresentation2D()
-        self.sliderRep.SetTitleText("contour")
-        self.sliderRep.GetPoint1Coordinate().SetCoordinateSystemToNormalizedViewport()
-        self.sliderRep.GetPoint1Coordinate().SetValue(0.65, 0.1)
-        self.sliderRep.GetPoint2Coordinate().SetCoordinateSystemToNormalizedViewport()
-        self.sliderRep.GetPoint2Coordinate().SetValue(0.95, 0.1)
+        self.slider_rep = vtk.vtkSliderRepresentation2D()
+        self.slider_rep.SetTitleText("contour")
+        self.slider_rep.GetPoint1Coordinate().SetCoordinateSystemToNormalizedViewport()
+        self.slider_rep.GetPoint1Coordinate().SetValue(0.65, 0.1)
+        self.slider_rep.GetPoint2Coordinate().SetCoordinateSystemToNormalizedViewport()
+        self.slider_rep.GetPoint2Coordinate().SetValue(0.95, 0.1)
 
-        self.sliderWidget = vtk.vtkSliderWidget()
-        self.sliderWidget.SetInteractor(self.iren)
-        self.sliderWidget.SetRepresentation(self.sliderRep)
-        self.sliderWidget.SetAnimationModeToAnimate()
-        self.sliderWidget.AddObserver(vtk.vtkCommand.InteractionEvent,
+        self.slider_widget = vtk.vtkSliderWidget()
+        self.slider_widget.SetInteractor(self.iren)
+        self.slider_widget.SetRepresentation(self.slider_rep)
+        self.slider_widget.SetAnimationModeToAnimate()
+        self.slider_widget.AddObserver(vtk.vtkCommand.InteractionEvent,
             self.update_contour);
 
     def clear(self):
@@ -106,18 +106,18 @@ class VtkGui(object):
         surface visualization of data
         """
         self.ren.RemoveAllViewProps()
-        self.renWin.Render()
+        self.ren_win.Render()
 
     def render(self):
         """
         select the current mode of visualization on trigger proper function
         """
-        print 'rendering timestep', self.currentTimeStep
+        print 'rendering timestep', self.current_timestep
 
         if self.dim == 3:
-            self.markerWidget.EnabledOn()
-            self.sliderWidget.SetEnabled(int(self.contourState))
-            if self.contourState:
+            self.marker_widget.EnabledOn()
+            self.slider_widget.SetEnabled(int(self.contour_state))
+            if self.contour_state:
                 self.render_contour()
             else:
                 self.render_3d()
@@ -128,63 +128,63 @@ class VtkGui(object):
         """
         surface visualization of data
         """
-        self.ren.RemoveActor(self.outlineActor)
-        if self.data.numTimes > 0:
-            self.mapper3d.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
-        self.ren.AddActor(self.mainActor)
+        self.ren.RemoveActor(self.outline_actor)
+        if self.data.num_times > 0:
+            self.mapper3d.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
+        self.ren.AddActor(self.main_actor)
         self.ren.ResetCamera()
-        self.renWin.Render()
+        self.ren_win.Render()
 
     def render_contour(self):
         """
         contour visualization of data
         """
-        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
+        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
 
-        self.contour.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
+        self.contour.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
 
-        scalarRange = activeScalar.GetRange()
+        scalarRange = active_scalar.GetRange()
         mean = 0.5*(scalarRange[0]+scalarRange[1])
         self.contour.SetValue(0, mean)
 
         # viz
         self.mapper3d.SetInputConnection(self.contour.GetOutputPort())
-        self.ren.AddActor(self.mainActor)
+        self.ren.AddActor(self.main_actor)
 
         self.add_outline()
 
         self.update_contourrange()
-        self.sliderRep.SetValue(mean)
-        self.sliderWidget.EnabledOn()
-        self.renWin.Render()
+        self.slider_rep.SetValue(mean)
+        self.slider_widget.EnabledOn()
+        self.ren_win.Render()
 
     def add_outline(self):
         outline = vtk.vtkOutlineFilter()
-        outline.SetInputConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
+        outline.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
         outlineMapper = vtk.vtkDataSetMapper()
         outlineMapper.SetInputConnection(outline.GetOutputPort())
-        self.outlineActor.SetMapper(outlineMapper)
-        self.ren.AddActor(self.outlineActor)
+        self.outline_actor.SetMapper(outlineMapper)
+        self.ren.AddActor(self.outline_actor)
 
     def set_line(self, linePoints):
-        self.linePoints = linePoints
+        self.line_points = linePoints
 
     def plot(self):
         """
         plot visualization of data
         """
         self.ren.RemoveAllViewProps()
-        # self.markerWidget.EnabledOff()
-        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
-        # print 'active scalar is', activeScalar.GetName()
+        # self.marker_widget.EnabledOff()
+        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        # print 'active scalar is', active_scalar.GetName()
 
         line = vtk.vtkLineSource()
         line.SetResolution(30)
-        line.SetPoint1(self.linePoints[0])
-        line.SetPoint2(self.linePoints[1])
+        line.SetPoint1(self.line_points[0])
+        line.SetPoint2(self.line_points[1])
         probe = vtk.vtkProbeFilter()
         probe.SetInputConnection(line.GetOutputPort())
-        probe.SetSourceConnection(self.data.grid[self.currentTimeStep].GetOutputPort())
+        probe.SetSourceConnection(self.data.grid[self.current_timestep].GetOutputPort())
 
         tuber = vtk.vtkTubeFilter()
         tuber.SetInputConnection(probe.GetOutputPort())
@@ -211,30 +211,30 @@ class VtkGui(object):
         # xyplot.SetXRange(.1, .35)
         # xyplot.SetYRange(.2, .4)
         # xyplot.GetProperty().SetColor(0, 0, 0)
-        xyplot.GetProperty().set_lineWidth(2)
+        xyplot.GetProperty().SetLineWidth(2)
         self.ren.AddActor2D(xyplot)
         # self.xyplotWidget = vtk.vtkXYPlotWidget()
         # self.xyplotWidget.SetXYPlotActor(xyplot)
         # self.xyplotWidget.SetInteractor(self.iren)
         # self.xyplotWidget.EnabledOn()
 
-        self.renWin.Render()
+        self.ren_win.Render()
 
     def update_contour(self, obj, ev):
-        value = self.sliderWidget.GetRepresentation().GetValue()
+        value = self.slider_widget.GetRepresentation().GetValue()
         self.contour.SetValue(0, value)
 
     def pointdata_modified(self, obj, ev):
         """
         callback: activated on modifications to pointData in grid
         """
-        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
+        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
         # if not self.mapper3d == None:
-        #     self.mapper3d.SetScalarRange(activeScalar.GetRange())
+        #     self.mapper3d.SetScalarRange(active_scalar.GetRange())
         # scalarBarActor = vtk.vtkScalarBarActor()
-        # scalarBarActor.SetTitle(activeScalar.GetName())
+        # scalarBarActor.SetTitle(active_scalar.GetName())
         # scalarBarActor.SetLookupTable(self.lut)
-        # self.scalarBarWidget.SetScalarBarActor(scalarBarActor)
+        # self.scalarbar_widget.SetScalarBarActor(scalarBarActor)
 
     def on_keypress(self, obj, ev):
         """
@@ -254,11 +254,11 @@ class VtkGui(object):
         elif char == 'c':
             self.render_contour()
         elif char == 's':
-            self.scalarBarWidget.SetEnabled(1-self.scalarBarWidget.GetEnabled())
-            self.renWin.Render()
+            self.scalarbar_widget.SetEnabled(1-self.scalarbar_widget.GetEnabled())
+            self.ren_win.Render()
         elif char == 'a':
             self.update_scalarbar()
-            self.renWin.Render()
+            self.ren_win.Render()
         elif char == ' ':
             self.play()
         elif char == 'k':
@@ -271,61 +271,61 @@ class VtkGui(object):
             self.screenshot('screenshot.png')
 
     def change_activescalar(self, name):
-        for t in xrange(0, self.data.numTimes):
+        for t in xrange(0, self.data.num_times):
             self.data.grid[t].GetInput().GetPointData().SetActiveScalars(name)
         self.update_scalarbar()
         self.update_contourrange()
-        self.renWin.Render()
+        self.ren_win.Render()
 
     def update_scalarbar(self):
         # resetRange = kwargs.get('resetRange', False)
-        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
-        self.scalarBarActor.SetTitle(activeScalar.GetName())
-        self.mapper3d.SetScalarRange(activeScalar.GetRange())
+        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        self.scalarbar_actor.SetTitle(active_scalar.GetName())
+        self.mapper3d.SetScalarRange(active_scalar.GetRange())
 
     def update_contourrange(self):
-        activeScalar = self.data.grid[self.currentTimeStep].GetInput().GetPointData().GetScalars()
-        scalarRange = activeScalar.GetRange()
-        self.sliderRep.SetMinimumValue(scalarRange[0])
-        self.sliderRep.SetMaximumValue(scalarRange[1])
+        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        scalarRange = active_scalar.GetRange()
+        self.slider_rep.SetMinimumValue(scalarRange[0])
+        self.slider_rep.SetMaximumValue(scalarRange[1])
 
     def goto_timestep(self, step):
-        self.currentTimeStep = step
+        self.current_timestep = step
         self.render()
 
     def next(self):
-        if not self.currentTimeStep == self.data.numTimes-1:
-            self.currentTimeStep += 1
+        if not self.current_timestep == self.data.num_times-1:
+            self.current_timestep += 1
             self.render()
 
     def prev(self):
-        if not self.currentTimeStep == 0:
-            self.currentTimeStep -= 1
+        if not self.current_timestep == 0:
+            self.current_timestep -= 1
             self.render()
 
     def first(self):
-        self.currentTimeStep = 0
+        self.current_timestep = 0
         self.render()
 
     def last(self):
-        self.currentTimeStep = self.data.numTimes-1
+        self.current_timestep = self.data.num_times-1
         self.render()
 
     def play(self):
-        for t in xrange(self.currentTimeStep+1, self.data.numTimes):
+        for t in xrange(self.current_timestep+1, self.data.num_times):
             time.sleep(0.5)
-            self.currentTimeStep = t
+            self.current_timestep = t
             self.render()
 
     def load_data(self, config):
         self.data.config = config
         self.data.read()
-        self.data.grid[self.currentTimeStep].GetInput().GetPointData().AddObserver(
+        self.data.grid[self.current_timestep].GetInput().GetPointData().AddObserver(
             vtk.vtkCommand.ModifiedEvent, self.pointdata_modified)
 
     def screenshot(self, filename):
         w2if = vtk.vtkWindowToImageFilter()
-        w2if.SetInput(self.renWin)
+        w2if.SetInput(self.ren_win)
         w2if.Update()
 
         writer = vtk.vtkPNGWriter()
@@ -337,14 +337,14 @@ if __name__ == '__main__':
     import config
     import data
 
-    renWin = vtk.vtkRenderWindow()
-    renWin.SetSize(config.config['vtkWidth'], config.config['vtkHeight'])
+    ren_win = vtk.vtkRenderWindow()
+    ren_win.SetSize(config.config['vtkWidth'], config.config['vtkHeight'])
     iren = vtk.vtkRenderWindowInteractor()
-    iren.SetRenderWindow(renWin)
+    iren.SetRenderWindow(ren_win)
 
     app = VtkGui(iren)
     app.load_data(config.config)
 
     iren.Initialize()
-    renWin.Render()
+    ren_win.Render()
     iren.Start()
