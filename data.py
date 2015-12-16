@@ -27,8 +27,10 @@ class Data(object):
             dim = 3
             cell_type = vtk.VTK_HEXAHEDRON
 
+        print 'reading data...'
         data = np.genfromtxt(filename, delimiter=',')
         data = reorder.reorder(data, 0, dim)
+        print 'done'
 
         num_pts = data.shape[0]
 
@@ -37,6 +39,7 @@ class Data(object):
         var.SetName(varname)
         var.SetNumberOfValues(num_pts)
 
+        print 'creating points...'
         pts = vtk.vtkPoints()
         pts.SetNumberOfPoints(num_pts)
         if dim == 2:
@@ -47,11 +50,12 @@ class Data(object):
             for i in xrange(0, num_pts):
                 pts.SetPoint(i, data[i,0], data[i,1], data[i,2])
                 var.SetValue(i, data[i,3])
+        print 'done'
 
+        print 'creating cells...'
+        cell_array = vtk.vtkCellArray()
         coord_x, indices = np.unique(data[:,0], return_index=True)
         indices_x = np.append(indices, num_pts)
-
-        cell_array = vtk.vtkCellArray()
         if dim == 2:
             for i in xrange(0, coord_x.shape[0]-1):
                 for j in xrange(0, indices_x[i+1]-indices_x[i]-1):
@@ -88,6 +92,7 @@ class Data(object):
                         for l in range(0,8):
                             hexa.GetPointIds().SetId(l, p[l])
                         cell_array.InsertNextCell(hexa)
+        print 'done'
 
         self.grid.append(vtk.vtkUnstructuredGrid())
         self.grid[0].SetPoints(pts)
