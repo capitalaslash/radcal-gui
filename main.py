@@ -60,8 +60,27 @@ class App(tk.Frame):
         parent.wm_title('radcal-gui')
         self.pack(fill='both', expand=1)
 
+        # left section
+        self.frame_dir = tk.Frame(self)
+        self.frame_dir.pack(side='left', fill='y', expand=0)
+
+        tk.Button(self.frame_dir, text='Open...',
+          command=self.open_dir).pack(side='top')
+
+        tk.Label(self.frame_dir, text='current directory:', anchor='w', width=30).pack(side='top')
+        self.var_dirname = tk.StringVar()
+        tk.Label(self.frame_dir, textvariable=self.var_dirname, anchor='w', width=30).pack(side='top')
+
+        self.list_file = tk.Listbox(self.frame_dir, selectmode='browse')
+        self.list_file.bind('<<ListboxSelect>>', self.file_modified)
+        self.list_file.pack(fill='x')
+
+        # main section
+        self.frame_main = tk.Frame(self)
+        self.frame_main.pack(fill='both', expand=1)
+
         # top section
-        self.frame_file = tk.Frame(self, bd=1, relief='sunken')
+        self.frame_file = tk.Frame(self.frame_main, bd=1, relief='sunken')
         self.frame_file.pack(fill='x', expand=0)
 
         tk.Button(self.frame_file, text='Open file',
@@ -71,7 +90,7 @@ class App(tk.Frame):
         tk.Label(self.frame_file, textvariable=self.var_filename).pack(side='left')
 
         # middle section
-        frame_main = tk.Frame(self)
+        frame_main = tk.Frame(self.frame_main)
         frame_main.pack(fill='both', expand=1)
 
         ren_win = vtk.vtkRenderWindow()
@@ -149,7 +168,7 @@ class App(tk.Frame):
         self.check_timeplot.grid(row=3, column=0, columnspan=2)
 
         # bottom section
-        self.frame_control = tk.Frame(self, bd=1, relief='sunken')
+        self.frame_control = tk.Frame(self.frame_main, bd=1, relief='sunken')
         self.frame_control.pack(fill='x', expand=0)
         tk.Button(self.frame_control, text='Quit', command=self.parent.quit, padx=5, pady=5).pack(side='right')
         tk.Button(self.frame_control, text='Save', command=self.write, padx=5, pady=5).pack(side='right')
@@ -201,6 +220,21 @@ class App(tk.Frame):
         self.clear()
         self.init_kshortcuts()
 
+    def open_dir(self):
+        dirname = tkFileDialog.askdirectory(
+            initialdir=os.getcwd(),
+            parent=self.frame_file,
+            # title='title'
+            )
+        self.dirname = dirname
+        self.var_dirname.set(trim_path(dirname, 30))
+        self.list_file.delete(0, 'end')
+        filenames = os.listdir(self.dirname)
+        for f in filenames:
+            if os.path.isfile(os.path.join(self.dirname,f)):
+                self.list_file.insert('end', f)
+
+
     def open_file(self):
         filename = tkFileDialog.askopenfilename(
             defaultextension='.txt',
@@ -251,6 +285,14 @@ class App(tk.Frame):
         self.vtk.clear()
         self.vtk.contour_state = bool(self.var_contour.get())
         self.vtk.render()
+
+    def file_modified(self, *args):
+        idx = self.list_file.curselection()[0]
+        filename = self.list_file.get(idx)
+        print 'current file: ', filename
+        self.config[u'filename'] = os.path.join(self.dirname, filename)
+        self.load_data(self.config)
+        self.button_render['state'] = 'normal'
 
     def var_modified(self, *args):
         idx = self.list_var.curselection()[0]
