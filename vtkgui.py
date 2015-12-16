@@ -33,7 +33,15 @@ class VtkGui(object):
 
         # lookup table
         self.lut = vtk.vtkLookupTable()
-        self.lut.SetHueRange(0.66667, 0.0)
+        # self.lut.SetHueRange(0.66667, 0.0)
+        for i in range(0,255):
+            x = i/255.
+            self.lut.SetTableValue(i,
+                min(2.*x,1.),
+                1.0-abs(1.0-2*x),
+                min(2.0-2.*x,1.0),
+                1.0)
+        self.lut.SetScaleToLog10()
         self.lut.Build()
 
         # 3d mapper
@@ -58,7 +66,7 @@ class VtkGui(object):
         # main renderer
         self.ren = vtk.vtkRenderer()
         # self.ren.SetLayer(0)
-        self.ren.SetBackground(0.1, 0.2, 0.4)
+        self.ren.SetBackground(82./255, 87./255, 110./255)
         self.ren.SetActiveCamera(self.camera)
         self.ren_win.AddRenderer(self.ren)
 
@@ -280,7 +288,7 @@ class VtkGui(object):
         # resetRange = kwargs.get('resetRange', False)
         active_scalar = self.data.grid[self.current_timestep].GetPointData().GetScalars()
         self.scalarbar_actor.SetTitle(active_scalar.GetName())
-        self.mapper3d.SetScalarRange(active_scalar.GetRange())
+        self.mapper3d.SetScalarRange([1.0, active_scalar.GetRange()[1]])
 
     def update_contourrange(self):
         active_scalar = self.data.grid[self.current_timestep].GetPointData().GetScalars()
