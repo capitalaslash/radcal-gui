@@ -116,14 +116,10 @@ class Data(object):
             filename_time = '{:s}.{:03d}.vtu'.format(filename, t)
             print "printing {:s} ...".format(filename_time)
             writer.SetInputData(self.grid[t])
-            writer.Setfilename(filename_time)
+            writer.SetFileName(filename_time)
             writer.Write()
 
 if __name__ == '__main__':
-    from config import Data
-
-    data = Data(filename='data/Co-60_Gconc_012h.txt')
-
+    data = Data(filename='data/Co-60_Vconc_012h.txt')
     data.read()
-
     data.write('grid.vtu')
