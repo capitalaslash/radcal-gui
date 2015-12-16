@@ -46,6 +46,11 @@ def validate_int(action, index, value_if_allowed,
     else:
         return True
 
+def trim_path(name, size):
+    if len(name) > size:
+        return '...' + name[-size+3:]
+    return name
+
 class App(tk.Frame):
     """The visualization app."""
     def __init__(self, parent, config):
