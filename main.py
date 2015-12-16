@@ -198,10 +198,10 @@ class App(tk.Frame):
 
     def open_file(self):
         filename = tkFileDialog.askopenfilename(
-            defaultextension='.dat',
-            filetypes=[('dat files', '.dat'), ('all files', '.*')],
+            defaultextension='.txt',
+            filetypes=[('txt files', '.txt'), ('all files', '.*')],
             initialdir=os.getcwd(),
-            initialfile='test.dat',
+            initialfile='test.txt',
             parent=self.frame_file,
             # title='title'
             )
