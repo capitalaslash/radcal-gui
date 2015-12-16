@@ -29,8 +29,7 @@ class VtkGui(object):
         self.camera = vtk.vtkCamera()
         self.camera.Elevation(-70)
         self.camera.SetViewUp(0, 0, 1)
-        self.camera.Azimuth(30)
-        self.camera.Dolly(0.8)
+        self.camera.Azimuth(-60)
 
         # lookup table
         self.lut = vtk.vtkLookupTable()
