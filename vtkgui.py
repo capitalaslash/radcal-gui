@@ -130,7 +130,7 @@ class VtkGui(object):
         """
         self.ren.RemoveActor(self.outline_actor)
         if self.data.num_times > 0:
-            self.mapper3d.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
+            self.mapper3d.SetInputData(self.data.grid[self.current_timestep])
         self.ren.AddActor(self.main_actor)
         self.ren.ResetCamera()
         self.ren_win.Render()
@@ -139,12 +139,12 @@ class VtkGui(object):
         """
         contour visualization of data
         """
-        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        active_scalar = self.data.grid[self.current_timestep].GetPointData().GetScalars()
 
-        self.contour.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
+        self.contour.SetInputData(self.data.grid[self.current_timestep])
 
         scalar_range = active_scalar.GetRange()
-        mean = 0.5*(scalarRange[0]+scalarRange[1])
+        mean = 0.5*(scalar_range[0]+scalar_range[1])
         self.contour.SetValue(0, mean)
 
         # viz
@@ -160,7 +160,7 @@ class VtkGui(object):
 
     def add_outline(self):
         outline = vtk.vtkOutlineFilter()
-        outline.SetInputConnection(self.data.grid[self.current_timestep].GetOutputPort())
+        outline.SetInputData(self.data.grid[self.current_timestep])
         outline_mapper = vtk.vtkDataSetMapper()
         outline_mapper.SetInputConnection(outline.GetOutputPort())
         self.outline_actor.SetMapper(outline_mapper)
@@ -175,7 +175,7 @@ class VtkGui(object):
         """
         self.ren.RemoveAllViewProps()
         # self.marker_widget.EnabledOff()
-        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        active_scalar = self.data.grid[self.current_timestep].GetPointData().GetScalars()
         # print 'active scalar is', active_scalar.GetName()
 
         line = vtk.vtkLineSource()
@@ -184,7 +184,7 @@ class VtkGui(object):
         line.SetPoint2(self.line_points[1])
         probe = vtk.vtkProbeFilter()
         probe.SetInputConnection(line.GetOutputPort())
-        probe.SetSourceConnection(self.data.grid[self.current_timestep].GetOutputPort())
+        probe.SetSourceData(self.data.grid[self.current_timestep])
 
         tuber = vtk.vtkTubeFilter()
         tuber.SetInputConnection(probe.GetOutputPort())
@@ -228,7 +228,7 @@ class VtkGui(object):
         """
         callback: activated on modifications to pointData in grid
         """
-        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        active_scalar = self.data.grid[self.current_timestep].GetPointData().GetScalars()
         # if not self.mapper3d == None:
         #     self.mapper3d.SetScalarRange(active_scalar.GetRange())
         # scalarBarActor = vtk.vtkScalarBarActor()
@@ -272,22 +272,22 @@ class VtkGui(object):
 
     def change_activescalar(self, name):
         for t in xrange(0, self.data.num_times):
-            self.data.grid[t].GetInput().GetPointData().SetActiveScalars(name)
+            self.data.grid[t].GetPointData().SetActiveScalars(name)
         self.update_scalarbar()
         self.update_contourrange()
         self.ren_win.Render()
 
     def update_scalarbar(self):
         # resetRange = kwargs.get('resetRange', False)
-        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        active_scalar = self.data.grid[self.current_timestep].GetPointData().GetScalars()
         self.scalarbar_actor.SetTitle(active_scalar.GetName())
         self.mapper3d.SetScalarRange(active_scalar.GetRange())
 
     def update_contourrange(self):
-        active_scalar = self.data.grid[self.current_timestep].GetInput().GetPointData().GetScalars()
+        active_scalar = self.data.grid[self.current_timestep].GetPointData().GetScalars()
         scalar_range = active_scalar.GetRange()
-        self.slider_rep.SetMinimumValue(scalarRange[0])
-        self.slider_rep.SetMaximumValue(scalarRange[1])
+        self.slider_rep.SetMinimumValue(scalar_range[0])
+        self.slider_rep.SetMaximumValue(scalar_range[1])
 
     def goto_timestep(self, step):
         self.current_timestep = step
@@ -320,7 +320,7 @@ class VtkGui(object):
     def load_data(self, config):
         self.data.config = config
         self.data.read()
-        self.data.grid[self.current_timestep].GetInput().GetPointData().AddObserver(
+        self.data.grid[self.current_timestep].GetPointData().AddObserver(
             vtk.vtkCommand.ModifiedEvent, self.pointdata_modified)
 
     def screenshot(self, filename):

@@ -338,7 +338,7 @@ class App(tk.Frame):
         varnames = self.vtk.data.get_varnames()
         for var in varnames:
             self.list_var.insert('end', var)
-        bounds = self.vtk.data.grid[0].GetInput().GetBounds()
+        bounds = self.vtk.data.grid[0].GetBounds()
         coord_bounds = {}
         coord_bounds['x'] = [bounds[0], bounds[1]]
         coord_bounds['y'] = [bounds[2], bounds[3]]
